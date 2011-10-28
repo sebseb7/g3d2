@@ -1,0 +1,20 @@
+g3d2
+============
+
+
+![pcb](/sebseb7/g3d2/raw/master/8x8_leds.jpg)
+
+8x8 pixel per Module
+9x4 Modules
+72x32 Pixel
+2304 LEDs
+
+using 8x6 font (is 7x5 + 1px space)
+12x5 characters
+
+
+pixel Densitiy: 1pixel per cm (2,54 dpi)
+
+each module has a "backpack" PCB, that contains the controller
+
+
