@@ -3,6 +3,7 @@ g3d2
 
 
 ![pcb](/sebseb7/g3d2/raw/master/8x8_leds.jpg)
+![pcb2](/sebseb7/g3d2/raw/master/8x8_ctrl.jpg)
 
 8x8 pixel per Module
 9x4 Modules
