@@ -1,6 +1,11 @@
 g3d2
 ============
 
+final layout:
+
+![pcb](/sebseb7/g3d2/raw/master/g3d2.jpg)
+
+boads:
 
 ![pcb](/sebseb7/g3d2/raw/master/g3d2_led.png)
 ![pcb2](/sebseb7/g3d2/raw/master/g3d2_ctrl.png)
