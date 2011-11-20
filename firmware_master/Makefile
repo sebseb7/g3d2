@@ -30,16 +30,16 @@ SIZE = arm-none-eabi-size
 
 #########################################################################
 
-all:: $(PROJECT).hex 
+all:: $(PROJECT).hex Makefile stats
 
 
-$(PROJECT).hex: $(PROJECT).elf
+$(PROJECT).hex: $(PROJECT).elf Makefile
 	$(OBJCOPY) -R .stack -O ihex $(PROJECT).elf $(PROJECT).hex
 
-$(PROJECT).elf: $(OBJECTS)
+$(PROJECT).elf: $(OBJECTS) Makefile
 	$(GCC) $(LDFLAGS) $(OBJECTS) -o $(PROJECT).elf
 
-stats: $(PROJECT).elf
+stats: $(PROJECT).elf Makefile
 	$(SIZE) $(PROJECT).elf
 
 clean:
@@ -52,14 +52,16 @@ clean:
 #  Default rules to compile .c and .cpp file to .o
 #  and assemble .s files to .o
 
-.c.o :
+.c.o : Makefile
 	$(GCC) $(GCFLAGS) -o $@ -c $<
 
-.S.o :
+
+.S.o : Makefile
 	$(AS) $(ASFLAGS) -o $(PROJECT)_crt.o $< > $(PROJECT)_crt.lst
 
 #########################################################################
 
-flash: $(PROJECT).hex
+
+flash: all
 	lpc21isp -verify $(PROJECT).hex /dev/ttyUSB0 19200 14746
 
