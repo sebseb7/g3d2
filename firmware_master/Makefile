@@ -5,7 +5,7 @@ PROJECT=g3d2_master
 OBJECTS=core/core_cm3.o core/system_LPC17xx.o core/startup_LPC17xx.o  main.o
 LSCRIPT=core/ldscript_rom_gnu.ld
 
-OPTIMIZATION = 0
+OPTIMIZATION = 1
 DEBUG = -g
 
 USB_DEVICE = /dev/ttyUSB0
