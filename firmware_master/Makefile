@@ -1,22 +1,23 @@
 #  Project Name
-PROJECT=test
+PROJECT=g3d2_master
+
 #  List of the objects files to be compiled/assembled
-OBJECTS=core/startup_LPC17xx.o core/core_cm3.o core/system_LPC17xx.o main.o
+OBJECTS=core/core_cm3.o core/system_LPC17xx.o core/startup_LPC17xx.o  main.o
 LSCRIPT=core/ldscript_rom_gnu.ld
 
 OPTIMIZATION = 0
 DEBUG = -g
-#LISTING = -ahls
+
+USB_DEVICE = /dev/ttyUSB0
 
 #  Compiler Options
 GCFLAGS = -Wall -fno-common -mcpu=cortex-m3 -mthumb -O$(OPTIMIZATION) $(DEBUG)
 GCFLAGS += -D__RAM_MODE__=0
-GCFLAGS += -Wa,-adhlns=$@.lst
+#GCFLAGS += -Wa,-adhlns=$@.lst
 #GCFLAGS += -Wcast-align -Wcast-qual -Wimplicit -Wpointer-arith -Wswitch
 #GCFLAGS += -Wredundant-decls -Wreturn-type -Wshadow -Wunused
 LDFLAGS = -mcpu=cortex-m3 -mthumb -O$(OPTIMIZATION) -nostartfiles  -T$(LSCRIPT)
-#LDFLAGS = -mcpu=cortex-m3 -mthumb -O$(OPTIMIZATION) -nostartfiles -Wl,-Map=bin/$(PROJECT).map -T$(LSCRIPT)
-ASFLAGS = $(LISTING) -mcpu=cortex-m3 --defsym RAM_MODE=0
+ASFLAGS = -mcpu=cortex-m3 --defsym RAM_MODE=0
 
 #  Compiler/Assembler/Linker Paths
 PATH:=/usr/local/Sourcery_G++_Lite/bin:${PATH}
@@ -46,22 +47,20 @@ clean:
 	$(REMOVE) $(OBJECTS)
 	$(REMOVE) $(PROJECT).hex
 	$(REMOVE) $(PROJECT).elf
-	$(REMOVE) *.o.lst core/*.o.lst
+#	$(REMOVE) *.o.lst core/*.o.lst
 
 #########################################################################
 #  Default rules to compile .c and .cpp file to .o
 #  and assemble .s files to .o
 
-.c.o : Makefile
+%.o: %.c Makefile
 	$(GCC) $(GCFLAGS) -o $@ -c $<
 
-
-.S.o : Makefile
-	$(AS) $(ASFLAGS) -o $(PROJECT)_crt.o $< > $(PROJECT)_crt.lst
+%.o: %.s Makefile
+	$(AS) $(ASFLAGS) -o $@  $< 
 
 #########################################################################
 
-
 flash: all
-	lpc21isp -verify $(PROJECT).hex /dev/ttyUSB0 19200 14746
+	lpc21isp -verify $(PROJECT).hex  $(USB_DEVICE) 19200 14746
 
