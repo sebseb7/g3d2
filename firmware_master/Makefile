@@ -2,8 +2,13 @@
 PROJECT=g3d2_master
 
 #  List of the objects files to be compiled/assembled
-OBJECTS=core/core_cm3.o core/system_LPC17xx.o core/startup_LPC17xx.o  main.o
+SRC=$(wildcard core/*.c *.c)
+ASRC=$(wildcard core/*.s)
+OBJECTS= $(SRC:.c=.o) $(ASRC:.s=.o)
+
 LSCRIPT=core/ldscript_rom_gnu.ld
+
+
 
 OPTIMIZATION = 1
 DEBUG = -g
