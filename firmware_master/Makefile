@@ -20,8 +20,6 @@ LDFLAGS = -mcpu=cortex-m3 -mthumb -O$(OPTIMIZATION) -nostartfiles  -T$(LSCRIPT)
 ASFLAGS = -mcpu=cortex-m3 --defsym RAM_MODE=0
 
 #  Compiler/Assembler Paths
-PATH:=/usr/local/Sourcery_G++_Lite/bin:${PATH}
-export PATH
 GCC = arm-none-eabi-gcc
 AS = arm-none-eabi-as
 OBJCOPY = arm-none-eabi-objcopy
