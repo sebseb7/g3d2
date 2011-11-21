@@ -12,7 +12,7 @@ endif
 
 LSCRIPT=core/ldscript_rom_gnu.ld
 
-OPTIMIZATION = 0
+OPTIMIZATION = 2
 DEBUG = -g
 
 #########################################################################
