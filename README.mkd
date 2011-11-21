@@ -1,26 +1,27 @@
 g3d2
 ============
 
+8x8 pixel per Module  
+9x4 Modules  
+72x32 Pixel  
+2304 LEDs  
+  
+using 8x6 font (is 7x5 + 1px space)  
+12x5 characters  
+  
+  
+pixel Densitiy: 1pixel per cm (2,54 dpi)  
+  
+each module has a "backpack" PCB, that contains the controller  
+
+
 final layout:
 
 ![pcb](/sebseb7/g3d2/raw/master/g3d2.jpg)
 
-boads:
+boards:
 
 ![pcb](/sebseb7/g3d2/raw/master/g3d2_led.png)
 ![pcb2](/sebseb7/g3d2/raw/master/g3d2_ctrl.png)
-
-8x8 pixel per Module
-9x4 Modules
-72x32 Pixel
-2304 LEDs
-
-using 8x6 font (is 7x5 + 1px space)
-12x5 characters
-
-
-pixel Densitiy: 1pixel per cm (2,54 dpi)
-
-each module has a "backpack" PCB, that contains the controller
 
 
