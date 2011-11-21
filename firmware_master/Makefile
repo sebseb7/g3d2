@@ -1,15 +1,23 @@
 PROJECT=g3d2_master
 
+
+ifeq ($(OSTYPE),)
+OSTYPE      = $(shell uname)
+endif
+ifneq ($(findstring Darwin,$(OSTYPE)),)
+USB_DEVICE = /dev/cu.usbserial-A600dJ57
+else
 USB_DEVICE = /dev/ttyUSB0
+endif
 
 LSCRIPT=core/ldscript_rom_gnu.ld
 
-OPTIMIZATION = 1
+OPTIMIZATION = 0
 DEBUG = -g
 
 #########################################################################
 
-SRC=$(wildcard core/*.c *.c)
+SRC=$(wildcard core/*.c *.c drivers/*.c)
 ASRC=$(wildcard core/*.s)
 OBJECTS= $(SRC:.c=.o) $(ASRC:.s=.o)
 

@@ -1,4 +1,5 @@
 #include "core/LPC17xx.h"
+#include "drivers/uart0.h"
 
 
 void init(void) {
@@ -8,14 +9,13 @@ void init(void) {
 	/* SCS: OSCRANGE=1 (12MHz on mbed), OSCEN=1 */
 	LPC_SC->SCS = 0x20;
 	/* Wait for the main oscillator to ready */
-	while (!(LPC_SC->SCS & (1<<6)))
-		;
+	while (!(LPC_SC->SCS & (1<<6)));
 	
 	/* CLKSRCSEL: CLKSRC=01 for main oscillator as PLL0 source */
 	LPC_SC->CLKSRCSEL = 0x01;
 
-	/* CCLKCFG: CCLKSEL = 3, PLL0 is divided by 4 to provide CPU clock */
-	LPC_SC->CCLKCFG = 0x03;
+	/* CCLKCFG: CCLKSEL = 2, PLL0 is divided by 3 to provide CPU clock */
+	LPC_SC->CCLKCFG = 0x02;
 	
 	/* PCKSEL0 and PCKSEL1 = 00, all peripherals get CCLK/4 */ 
 	LPC_SC->PCLKSEL0 = 0x0;
@@ -24,10 +24,14 @@ void init(void) {
 	/* PLL0 Configuration, taken from CMSIS LPC17xx example */
 	LPC_SC->PLL0CFG = 0x0008003c;
 	
-	// 99 M
-	// 5 N
+	// 60 M
+	// 8 N
 	
-	// fccc 275 550
+	// fin >32kHz <50Mhz
+	// fcco = (2xM*Fin)/N
+	
+	// fccc >275Mhz <550Mhz
+	// fref = Fin / N
 	
 	
 	/* PLL Feed */
@@ -111,6 +115,8 @@ int main(void) {
 
 	/* Turn on all of port 1 (this includes the 4 mbed LEDs) */
 	LPC_GPIO0->FIODIR |= (1<<19)|(1<<20);
+	
+	UART0_Init(57600);
 
 	while(1)
 	{
@@ -118,14 +124,17 @@ int main(void) {
 		delay_();
 		LPC_GPIO0->FIOPIN &= ~(1<<19);
 		delay_();
+		UART0_Sendchar(64);
 		
 		if((LPC_GPIO0->FIOPIN & (1<<10)) == (1<<10))
 		{
 			LPC_GPIO0->FIOPIN |= (1<<20);
+		//	 UART0_PrintString("test1");
 		}
 		else
 		{
 			LPC_GPIO0->FIOPIN &= ~(1<<20);
+		//	 UART0_PrintString("test2");
 		}
 	}
 }
