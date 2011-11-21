@@ -20,11 +20,12 @@ DEBUG = -g
 SRC=$(wildcard core/*.c *.c drivers/*.c)
 ASRC=$(wildcard core/*.s)
 OBJECTS= $(SRC:.c=.o) $(ASRC:.s=.o)
+HEADERS=$(wildcard core/*.h drivers/*.h *.h)
 
 #  Compiler Options
 GCFLAGS = -Wall -fno-common -mcpu=cortex-m3 -mthumb -O$(OPTIMIZATION) $(DEBUG)
-GCFLAGS += -D__RAM_MODE__=0
-LDFLAGS = -mcpu=cortex-m3 -mthumb -O$(OPTIMIZATION) -nostartfiles  -T$(LSCRIPT)
+GCFLAGS += -D__RAM_MODE__=0 
+LDFLAGS = -mcpu=cortex-m3 -mthumb -O$(OPTIMIZATION) -nostartfiles  -T$(LSCRIPT) 
 ASFLAGS = -mcpu=cortex-m3 --defsym RAM_MODE=0
 
 #  Compiler/Assembler Paths
@@ -54,10 +55,10 @@ clean:
 
 #########################################################################
 
-%.o: %.c Makefile
+%.o: %.c Makefile $(HEADERS)
 	$(GCC) $(GCFLAGS) -o $@ -c $<
 
-%.o: %.s Makefile
+%.o: %.s Makefile 
 	$(AS) $(ASFLAGS) -o $@  $< 
 
 #########################################################################

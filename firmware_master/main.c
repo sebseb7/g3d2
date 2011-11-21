@@ -1,87 +1,10 @@
+#include <stdlib.h>
+#include <stdio.h>
+
+
 #include "core/LPC17xx.h"
 #include "drivers/uart0.h"
 
-
-void init(void) {
-	/* Based on CMSIS SystemInit() for LPC17xx */
-	/* Also see chapters 3 and 4 of LPC17xx User Manual, UM10360 */
-
-	/* SCS: OSCRANGE=1 (12MHz on mbed), OSCEN=1 */
-	LPC_SC->SCS = 0x20;
-	/* Wait for the main oscillator to ready */
-	while (!(LPC_SC->SCS & (1<<6)));
-	
-	/* CLKSRCSEL: CLKSRC=01 for main oscillator as PLL0 source */
-	LPC_SC->CLKSRCSEL = 0x01;
-
-	/* CCLKCFG: CCLKSEL = 2, PLL0 is divided by 3 to provide CPU clock */
-	LPC_SC->CCLKCFG = 0x02;
-	
-	/* PCKSEL0 and PCKSEL1 = 00, all peripherals get CCLK/4 */ 
-	LPC_SC->PCLKSEL0 = 0x0;
-	LPC_SC->PCLKSEL1 = 0x0;
-
-	/* PLL0 Configuration, taken from CMSIS LPC17xx example */
-	LPC_SC->PLL0CFG = 0x0008003c;
-	
-	// 60 M
-	// 8 N
-	
-	// fin >32kHz <50Mhz
-	// fcco = (2xM*Fin)/N
-	
-	// fccc >275Mhz <550Mhz
-	// fref = Fin / N
-	
-	
-	/* PLL Feed */
-	LPC_SC->PLL0FEED = 0xAA;
-	LPC_SC->PLL0FEED = 0x55;
-	/* Enable PLL0 */
-	LPC_SC->PLL0CON = 0x01;
-	/* PLL Feed */
-	LPC_SC->PLL0FEED = 0xAA;
-	LPC_SC->PLL0FEED = 0x55;
-	/* Wait for PLL0 lock */
-	while (!(LPC_SC->PLL0STAT & (1<<26)))
-		;
-	/* Enable and connect PLL0 */
-	LPC_SC->PLL0CON = 0x03;
-	/* PLL Feed */
-	LPC_SC->PLL0FEED = 0xAA;
-	LPC_SC->PLL0FEED = 0x55;
-	/* Wait for PLL1 enable and connect */
-	while (!(LPC_SC->PLL0STAT & ((1<<25) | (1<<24))))
-		;
-
-	/* PLL1 Configuration, taken from CMSIS LPC17xx example */
-	LPC_SC->PLL1CFG = 0x00000023;
-	/* PLL Feed */
-	LPC_SC->PLL1FEED = 0xAA;
-	LPC_SC->PLL1FEED = 0x55;
-	/* Enable PLL1 */
-	LPC_SC->PLL1CON = 0x01;
-	/* PLL Feed */
-	LPC_SC->PLL1FEED = 0xAA;
-	LPC_SC->PLL1FEED = 0x55;
-	/* Wait for PLL1 lock */
-	while (!(LPC_SC->PLL1STAT & (1<<10)))
-		;
-	/* Enable and connect PLL1 */
-	LPC_SC->PLL1CON = 0x03;
-	/* PLL Feed */
-	LPC_SC->PLL1FEED = 0xAA;
-	LPC_SC->PLL1FEED = 0x55;
-	/* Wait for PLL1 enable and connect */
-	while (!(LPC_SC->PLL1STAT & ((1<<9) | (1<<8))))
-		;
-
-	/* Additional settings */
-	//LPC_SC->USBCLKCFG = ...;
-	//LPC_SC->PCONP = ...;
-	//LPC_SC->CLKOUTCFG = ...;
-	//LPC_SC->FLASHCFG = ...;
-}
 
 void delay_()
 {
@@ -113,10 +36,16 @@ void delay_()
 int main(void) {
 	/* Your code goes here */
 
+	// don't know why this is incorrect
+	SystemCoreClock = 100000000;
+
 	/* Turn on all of port 1 (this includes the 4 mbed LEDs) */
 	LPC_GPIO0->FIODIR |= (1<<19)|(1<<20);
 	
-	UART0_Init(57600);
+	UART0_Init(115200);
+	
+	// sets SystemCoreClock to 44583722, but why ? 
+	SystemCoreClockUpdate();
 
 	while(1)
 	{
@@ -124,17 +53,24 @@ int main(void) {
 		delay_();
 		LPC_GPIO0->FIOPIN &= ~(1<<19);
 		delay_();
-		UART0_Sendchar(64);
+
+
+		char buf[32];
+
+		siprintf(buf,"%i",(int)SystemCoreClock);
+
+		 UART0_PrintString(buf);
+		 UART0_PrintString("\n");
 		
 		if((LPC_GPIO0->FIOPIN & (1<<10)) == (1<<10))
 		{
 			LPC_GPIO0->FIOPIN |= (1<<20);
-		//	 UART0_PrintString("test1");
+			UART0_PrintString("test1");
 		}
 		else
 		{
 			LPC_GPIO0->FIOPIN &= ~(1<<20);
-		//	 UART0_PrintString("test2");
+			UART0_PrintString("test2");
 		}
 	}
 }

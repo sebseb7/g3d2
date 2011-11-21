@@ -62,14 +62,14 @@ void UART0_Init(int baudrate)
 	unsigned long int Fdiv;
 
 	// PCLK_UART0 is being set to 1/4 of SystemCoreClock
-	pclk = 100000000 / 4;	
+	pclk = SystemCoreClock / 4;	
 	
 	// Turn on power to UART0
 	LPC_SC->PCONP |=  PCUART0_POWERON;
 		
 	// Turn on UART0 peripheral clock
-//	LPC_SC->PCLKSEL0 &= ~(PCLK_UART0_MASK);
-//	LPC_SC->PCLKSEL0 |=  (0 << PCLK_UART0);		// PCLK_periph = CCLK/4
+	LPC_SC->PCLKSEL0 &= ~(PCLK_UART0_MASK);
+	LPC_SC->PCLKSEL0 |=  (0 << PCLK_UART0);		// PCLK_periph = CCLK/4
 	
 	// Set PINSEL0 so that P0.2 = TXD0, P0.3 = RXD0
 	LPC_PINCON->PINSEL0 &= ~0xf0;
