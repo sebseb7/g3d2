@@ -57,7 +57,7 @@ int main(void) {
 
 		char buf[100];
 
-		siprintf(buf,"System Core Clock is set to: %i \n",(int)SystemCoreClock);
+		sprintf(buf,"System Core Clock is set to: %i \n",(int)SystemCoreClock);
 
 		UART0_PrintString(buf);
 		
