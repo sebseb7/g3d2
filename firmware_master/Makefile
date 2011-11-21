@@ -5,7 +5,7 @@ ifeq ($(OSTYPE),)
 OSTYPE      = $(shell uname)
 endif
 ifneq ($(findstring Darwin,$(OSTYPE)),)
-USB_DEVICE = /dev/cu.usbserial-A600dJ57
+USB_DEVICE = $(shell ls /dev/cu.usbserial*)
 else
 USB_DEVICE = /dev/ttyUSB0
 endif
