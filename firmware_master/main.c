@@ -55,12 +55,11 @@ int main(void) {
 		delay_();
 
 
-		char buf[32];
+		char buf[100];
 
-		siprintf(buf,"%i",(int)SystemCoreClock);
+		siprintf(buf,"System Core Clock is set to: %i \n",(int)SystemCoreClock);
 
-		 UART0_PrintString(buf);
-		 UART0_PrintString("\n");
+		UART0_PrintString(buf);
 		
 		if((LPC_GPIO0->FIOPIN & (1<<10)) == (1<<10))
 		{
