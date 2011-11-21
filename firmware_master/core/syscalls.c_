@@ -1,3 +1,5 @@
+//this file is only neccessary if you want to use the siprintf/sprintf from the ARM newlibc
+
 /* based on a example-code from Keil for CS G++ */
 
 /* for caddr_t (typedef char * caddr_t;) */
