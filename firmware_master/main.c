@@ -23,10 +23,8 @@ void delay_ms(uint32_t delay_period_ms)
 }
 
 
-int main(void) {
-	/* Your code goes here */
-	
-
+int main(void) 
+{
 	// don't know why this is incorrect
 	SystemCoreClock = 100000000;
 	SysTick_Config(SystemCoreClock / 1000);
