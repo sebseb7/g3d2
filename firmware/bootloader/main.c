@@ -1,8 +1,3 @@
-/* MCU frequency */
-#ifndef F_CPU
-#define F_CPU 20000000
-#endif
-
 /* UART Baudrate */
 #define BAUDRATE 230400
 
@@ -48,6 +43,9 @@
 //#include <util/delay.h>
 
 #include "chipdef.h"
+
+#include "leds.h"
+
 
 uint8_t gBuffer[SPM_PAGESIZE];
 
@@ -201,6 +199,9 @@ int main(void)
 
 	UART_CTRL = UART_CTRL_DATA;
 	UART_CTRL2 = UART_CTRL2_DATA;
+	
+	
+	leds_init();
 
 	if ((BLPIN & (1<<BLPNUM)) && (GPIOR2 == 0) ) {
 

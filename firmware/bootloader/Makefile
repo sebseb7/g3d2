@@ -1,13 +1,14 @@
 PROJECT=g3d2_bl
 
 MCU = atmega88pa
-MCU_AVRDUDE = atmega88pa
+MCU_AVRDUDE = atmega88
 
 
 BOOTSIZE=1024
 
 MT_BOOTLOADER_ADDRESS = 0x1800
-FUSE_SETTINGS = -U lfuse:w:0xD6:m -U hfuse:w:0xDC:m -U efuse:w:0xF8:m -U lock:w:0xEF:m
+#full swing, bod 4,7, 1k bootloader + write protection
+FUSE_SETTINGS = -U lfuse:w:0xD6:m -U hfuse:w:0xDC:m -U efuse:w:0x0:m -U lock:w:0x2F:m
 
 
 ifeq ($(OSTYPE),)
@@ -30,7 +31,7 @@ HEADERS=$(wildcard *.h)
 
 
 #  Compiler Options
-GCFLAGS = -mmcu=$(MCU) -I. -gstabs -DBOOTSIZE=$(BOOTSIZE)  -Os -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -Wall -Wstrict-prototypes  -std=gnu99 -MD -MP
+GCFLAGS = -mmcu=$(MCU) -I. -gstabs -DBOOTSIZE=$(BOOTSIZE) -DF_CPU=20000000 -Os -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -Wall -Wstrict-prototypes  -std=gnu99 -MD -MP
 #LDFLAGS =  -Wl,-Map=pwbl.map,--cref    -lm -Wl,--section-start=.text=0x1800
 LDFLAGS = -mmcu=$(MCU)   -Wl,--section-start=.text=$(MT_BOOTLOADER_ADDRESS)
 
@@ -67,8 +68,8 @@ clean:
 #########################################################################
 
 flash: all
-	avrdude -p $(MCU_AVRDUDE) -P $(USB_DEVICE) -c stk500v2    -U flash:w:$(PROJECT).hex
+	avrdude -F -p $(MCU_AVRDUDE) -P $(USB_DEVICE) -c stk500v2    -U flash:w:$(PROJECT).hex
 
 fuse:
-	avrdude -p $(MCU_AVRDUDE) -P $(USB_DEVICE) -c stk500v2    $(FUSE_SETTINGS)
+	avrdude -F -p $(MCU_AVRDUDE) -P $(USB_DEVICE) -c stk500v2    $(FUSE_SETTINGS)
 
