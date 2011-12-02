@@ -4,7 +4,7 @@
 
 #curl http://seb.exse.net/ledtest.hex > ledtest.hex && avrflash.sh  m168 -F -v -v  -U flash:w:ledtest.hex
 
-MCU = atmega88pa
+MCU = atmega88
 #MCU = atmega168p
 
 #MCU = atmega644
@@ -35,7 +35,7 @@ OPT = s
 
 ##########################################################################################################
 # List C source files here. (C dependencies are automatically generated.)
-SRC	= main.c plasma_seb.c
+SRC	= main.c usart.c
 #SRC	= main.c helix.c
 ##########################################################################################################
 
@@ -149,7 +149,7 @@ AVRDUDE_WRITE_EEPROM = -U eeprom:w:$(TARGET).eep
 AVRDUDE_FLAGS = -p $(MCU) -F -P $(AVRDUDE_PORT) -c $(AVRDUDE_PROGRAMMER) -v -v 
 #AVRDUDE_UFLAGS = -p atmega88 -F -P /dev/ttyUSB0 -c avr109 -b 38400  -v -v 
 #AVRDUDE_UFLAGS = -p $(MCU) -P /dev/cu.usbserial-A2002QDi -c avr109 -b 230400  -v -v 
-AVRDUDE_UFLAGS = -p $(MCU) -F -P /dev/cu.usbserial-A600dJ57 -c avr109 -b 230400  -v -v 
+AVRDUDE_UFLAGS = -p $(MCU) -F -P /dev/ttyUSB0 -c avr109 -b 230400  -v -v 
 #AVRDUDE_UFLAGS = -p $(MCU) -F -P /dev/ttyUSB0 -c avr109 -b 38400  -v -v 
 #AVRDUDE_FLAGS = -p $(MCU) -c $(AVRDUDE_PROGRAMMER)
 

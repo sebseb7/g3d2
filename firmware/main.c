@@ -6,11 +6,22 @@
 
 #include "main.h"
 #include "pins.h"
-#include "plasma_seb.h"
-//#include "helix.h"
+#include "usart.h"
 
+
+#define DISPLAY_WIDTH 72
+#define DISPLAY_HEIGHT 32
+
+typedef void (*AppPtr_t)(void) __attribute__ ((noreturn)); 
+
+uint8_t pixelIsOurs(uint8_t,uint8_t);
 
 uint8_t active_col = 1;
+
+uint8_t addr = 0;
+uint8_t module_row = 0;
+uint8_t module_column = 0;
+
 
 uint8_t leds[64] = {
 	0,0,0,0,0,0,0,0,
@@ -271,79 +282,220 @@ int main(void)
 	sei();
 
 
-	uint8_t x=0;	
-	uint8_t y=0;	
 
-	uint8_t z=0;
+	USART0_Init();
+
 	
+    uint8_t pixel_x = 0;
+    uint8_t pixel_y = 0;
+    uint8_t pixel_g = 0;
+    uint8_t pixel_nr = 0;
+
+    uint8_t frameBuffer[16*3];
+    for(uint8_t i = 0;i<(16*3);i++)
+    {
+        frameBuffer[i]=0;
+    }
+
+
+	uint8_t data = 0;  
+	uint8_t state = 0;
+	uint8_t escape = 0;
+	uint8_t idx = 0;
+	uint8_t color_state = 0;
+	uint8_t x_state = 0;
+	uint8_t y_state = 0;
+	setLedXY(1,1,4);
+
+
 	while(1)
 	{
-
-		if(led_mode < 2)
+		if(USART0_Getc_nb(&data))
 		{
-			if(frame_update == 0)
+
+			if(data == 0x42)
 			{
-/*		
-		    for(x = 0; x < 8; x++) {
-    	        for(y = 0; y < 8; y++) {
-					setLedXY(x, y, rand()&7);
+				// single pixel
+				state = 1;
+				idx = 0;
+				continue;
+			}
+			if(data == 0x23)
+			{
+				// full frame
+				state = 2;
+
+				color_state = 0;
+				x_state = 0;
+				y_state = 0;
+				continue;
+			}
+			if(data == 0x65)
+			{
+				escape = 1;
+				continue;
+			}
+			if(data == 0x66)
+			{
+				// bootloader
+				state = 3;
+				continue;
+			}
+			if(escape == 1)
+			{
+				escape = 0;
+				if(data == 0x01)
+				{
+					data = 0x23;
 				}
-			}*/
+				else if(data == 0x02)
+				{
+					data = 0x42;
+				}
+				else if(data == 0x03)
+				{
+					data = 0x65;
+				}
+				else if(data == 0x04)
+				{
+					data = 0x66;
+				}
+			}
 			
-			tick();
-				frame_update=6;
-			}
-		}
-		else if (led_mode < 4)
-		{
-		    for(x = 0; x < 8; x++) {
-    	        for(y = 0; y < 8; y++) {
-					setLedXY(x, y, 7);
-				}
-			}
-		}
-
-		else if (led_mode < 6)
-		{
-		    for(x = 0; x < 8; x++) {
-    	        for(y = 0; y < 8; y++) {
-					setLedXY(x, y, y);
-				}
-			}
-		}
-
-		else if (led_mode < 8 )
-		{
-		    for(x = 0; x < 8; x++) {
-    	        for(y = 0; y < 8; y++) {
-					setLedXY(x, y, x);
-				}
-			}
-		}
-
-		else if (led_mode < 10 )
-		{
-			if(frame_update == 0)
+		
+			if(state == 1)
 			{
-			    for(x = 0; x < 8; x++) {
-    	        	for(y = 0; y < 8; y++) {
-						setLedXY(x, y, (z&1)*7);
+				// wait for our pixel
+				if(idx == 0)
+				{
+					pixel_x = data;
+				}
+				if(idx == 1)
+				{
+					pixel_y = data;
+				}
+				if(idx == 2)
+				{
+					pixel_g = data;
+/*					if((pixel_x == 0) && (pixel_y == 0))
+					{
+						setLedXY(0,0,pixel_g);
+					}
+					else
+					{
+						pixel_nr = pixelIsOurs(pixel_x,pixel_y);*/
+						setLedXY(pixel_x,pixel_y,pixel_g);
+/*						if(pixel_nr != 0)
+						{
+						}
+					}*/
+				}
+				idx++;
+				
+			}
+
+			if(state == 2)
+			{
+				// wait for our part of the frame
+
+
+				pixel_nr = pixelIsOurs(x_state+1,y_state+1);
+				if(pixel_nr != 0)
+				{
+						frameBuffer[((pixel_nr-1)*3)+color_state] = data;
+				}
+				
+				color_state++;
+				if(color_state == 3) 
+				{
+					color_state = 0;
+					y_state++;
+				}
+				if(y_state == DISPLAY_WIDTH)
+				{
+					y_state=0;
+					x_state++;
+				}
+				if(x_state == DISPLAY_HEIGHT)
+				{
+//					SetAllLeds(frameBuffer);
+				}
+			}
+
+			if(state == 3)
+			{
+				if(data == 0xff)
+				{
+					// get addr
+					// display addr on LEDs
+//					SetLed(0,0,0,0);
+					for(uint8_t i = 0;i<8;i++)
+					{
+						if((addr & (1<<i))==(1<<i))
+						{
+//							SetLed(i+1,0xa0,0,0);
+						}
 					}
 				}
-				z++;
-				frame_update=2;
+				else if(data == addr)
+				{
+					// jump to bootloader
+					GPIOR2=255;
+					AppPtr_t AppStartPtr = (AppPtr_t)0x1800; 
+					AppStartPtr();
+				}
+				else
+				{
+					//disable UART for a few seconds
+			        UCSR0B &= ~(1 << RXCIE0);
+				    UCSR0B &= ~(1 << RXEN0);
+//					SetLed(0,0,0,150);
+					for(uint8_t i = 0;i < 16;i++)
+					{
+//						_delay_ms(0xbf);
+//						SetLed(i+1,0,150,0);
+//						writeChannels();
+//						_delay_ms(0xbf);
+//						SetLed(i+1,150,0,0);
+//						writeChannels();
+					}
+//					_delay_ms(0xbf);
+//					SetLed(0,0,0,0);
+//					writeChannels();
+				    UCSR0B |= (1 << RXEN0);
+			        UCSR0B |= (1 << RXCIE0);
+					// sleep for bootloader of differend device display progress on LEDs
+				}
+				state = 0;
 			}
+
 		}
-
-//		_delay_ms(100);
-                                    		
-	
 	}
-
-
-
 }
 
+//returns 0 if that pixel is not on out tile, otherwise LED number (1..16)
+uint8_t pixelIsOurs(uint8_t x,uint8_t y)
+{
+	x--;
+	y--;
+	
+	if( 
+		(x >=  module_row      *4) && 
+		(x <  (module_row+1)   *4) &&
+		(y >=  module_column   *4) && 
+		(y <  (module_column+1)*4)
+	)
+	{
+		uint8_t row = x - module_row*4;
+		uint8_t col = y - module_column*4;
+	
+		
+	
+		return row*4+col+1;
+	} 
+
+	return 0;
+}
 
 void setLedXY(uint8_t x,uint8_t y, uint8_t brightness)
 {
