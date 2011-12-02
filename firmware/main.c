@@ -1,7 +1,7 @@
 #include <inttypes.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
-//#include <util/delay.h>
+#include <util/delay.h>
 #include <stdlib.h>
 
 #include "main.h"
@@ -9,21 +9,36 @@
 #include "usart.h"
 
 
+/* 
 
-/*
+	new new idea:
+	
+	- 3 ports == 3 bytes a 64 states (2 bytes setzen, 1 bytes verunden)
+	- 64 dynamische interrupts ueber 16bit timer mit variabler laufzeit.
+	
+	- doppelte (dreifache?)anzahl buffers (in einen buffer schreiben die uats, aus dem anderen lesen die ints)
+	- nach je 64 zyklen umschalten
+
+	- uat interrupt: disable uart int bit, renable global interrupt, at the end of uart , reenable uart
+	- check wiht oszi
+	- try to skip full frame bytes in uart int
+	- other type of ringbuffer ? check uart int runtime agains bytes in p
+
+
 70 40 20 8 4 2 1
 
 	new idea:
 	
 	cycle0: active all full on LEDs
 	cycle10: copy buffer
-	cycle30: activate all 6/7 leds
+	cycle20: activate all 6/7 leds
 	cycle40: activate all 5/7 leds
 	cycle62: activate all 4/7 leds
 	cycle66: activate all 3/7 leds
 	cycle68: activate all 2/7 leds
 	cycle69: activate all 1/7 leds
 	cycle70: all OUT
+	cycle71: cycle = 0
 */
 
 
@@ -33,224 +48,117 @@
 typedef void (*AppPtr_t)(void) __attribute__ ((noreturn)); 
 
 uint8_t pixelIsOurs(uint8_t,uint8_t);
-void doit(void);
 
-uint8_t active_col = 1;
 
-uint8_t volatile do_something = 0;
+
 uint8_t addr = 0;
 uint8_t module_row = 0;
 uint8_t module_column = 0;
 
-uint8_t colors[8] = { 0,1,2,4,8,20,40,70 };
 
-uint8_t leds[64] = {
-	0,0,0,0,0,0,0,0,
-	0,0,0,0,0,0,0,0,
-	0,0,0,0,0,0,0,0,
-	0,0,0,0,0,0,0,0,
-	0,0,0,0,0,0,0,0,
-	0,0,0,0,0,0,0,0,
-	0,0,0,0,0,0,0,0,
-	0,0,0,0,0,0,0,0,
-};
 
-uint8_t volatile leds_buf[64] = {
-	0,0,0,0,0,0,0,0,
-	0,0,0,0,0,0,0,0,
-	0,0,0,0,0,0,0,0,
-	0,0,0,0,0,0,0,0,
-	0,0,0,0,0,0,0,0,
-	0,0,0,0,0,0,0,0,
-	0,0,0,0,0,0,0,0,
-	0,0,0,0,0,0,0,0,
-};
+//these variabled are used by the timer intr
+uint8_t pixel_step = 0;
+uint8_t pixel_step2 = 0;
+uint8_t row_step = 0;
 
-uint8_t volatile cycle = 0;
+uint8_t steps[7] = {1,2,4,12,20,30,1};
 
-ISR (TIMER0_OVF_vect)
+uint8_t rowbyte_portc[8] = {~1,~2,~4,~8,~16,~32,~0,~0};
+uint8_t rowbyte_portd[8] = {12,12,12,12,12 ,12 ,8,4};
+
+uint8_t buffer_ready = 1;
+
+uint8_t colbyte_portb_a[56]={
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							};
+
+uint8_t volatile colbyte_portb_b[56]={
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							};
+
+uint8_t colbyte_portd_a[56]={
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							};
+
+uint8_t volatile colbyte_portd_b[56]={
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							};
+
+
+ISR (TIMER1_OVF_vect)
 {
+	OCR1A = 0xff*steps[pixel_step];
 
-	if(do_something == 0)
+	PORTB = colbyte_portb_a[pixel_step2];
+	uint8_t y = PORTD;
+	y &= ~((1<<PORTD6)|(1<<PORTD7));
+	y |= colbyte_portd_a[pixel_step2];
+	PORTD = y;
+
+	if (pixel_step == 0)
 	{
-		do_something = 1;
-		cycle++;
+		PORTC = rowbyte_portc[row_step];
+		y &= ~((1<<PORTD2)|(1<<PORTD3));
+		y |= rowbyte_portd[row_step];
+		PORTD = y;
+	}
 
-		if(
-			(cycle != 1)&&
-			(cycle != 2)&&
-			(cycle != 4)&&
-			(cycle != 8)&&
-			(cycle != 20)&&
-			(cycle != 40)&&
-			(cycle != 70)
-		)
-		{
-			do_something = 0;
-			return;
-		}
-
-		if(cycle == 70)
-		{
-			cycle = 0;
-		}
 	
-
+	pixel_step++;
+	pixel_step2++;
+	
+	if(pixel_step == 7)
+	{
+		pixel_step = 0;
+		row_step++;
+		if(row_step==8)
+		{
+			row_step=0;
+			pixel_step2 = 0;
+			
+			if(buffer_ready == 1)
+			{
+				for(uint8_t j=0;j<56;j++)
+				{
+					colbyte_portb_a[j]=colbyte_portb_b[j];
+					colbyte_portd_a[j]=colbyte_portd_b[j];
+				}
+			}
+			
+			
+		}
 	}
 }
 
-void doit()
-{
-	uint8_t col_fac = active_col * 8;
-
-	
-	if(cycle != 0)
-	{
-		if(	leds[col_fac+0] == cycle)
-		{
-			ROW0_OFF;
-		}
-		if(	leds[col_fac+1] == cycle)
-		{
-			ROW1_OFF;
-		}
-		if(	leds[col_fac+2] == cycle)
-		{
-			ROW2_OFF;
-		}
-		if(	leds[col_fac+3] == cycle)
-		{
-			ROW3_OFF;
-		}
-		if(	leds[col_fac+4] == cycle)
-		{
-			ROW4_OFF;
-		}
-		if(	leds[col_fac+5] == cycle)
-		{
-			ROW5_OFF;
-		}
-		if(	leds[col_fac+6] == cycle)
-		{
-			ROW6_OFF;
-		}
-		if(	leds[col_fac+7] == cycle)
-		{
-			ROW7_OFF;
-		}
-	
-		do_something = 0;
-		return;
-	}
-
-
-	PORTC = 0x3f;
-	PORTD |= (1<<2)|(1<<3);
-	
-	//which is short for: 
-	
-/*	ROW0_OFF;
-	ROW1_OFF;
-	ROW2_OFF;
-	ROW3_OFF;
-	ROW4_OFF;
-	ROW5_OFF;
-	ROW6_OFF;
-	ROW7_OFF;*/
-
-	active_col++;
-	
-	if(active_col == 8)
-	{
-		active_col = 0;
-	}
-	
-	
-
-	switch(active_col)
-	{
-		case 1:
-			COL0_OFF;
-			COL1_ON;
-		break;
-		case 2:
-			COL1_OFF;
-			COL2_ON;
-		break;
-		case 3:
-			//COL2_OFF;
-			//COL3_ON;
-			PORTB = PORTB << 1;
-		break;
-		case 4:
-//			COL3_OFF;
-//			COL4_ON;
-			PORTB = PORTB << 1;
-		break;
-		case 5:
-//			COL4_OFF;
-//			COL5_ON;
-			PORTB = PORTB << 1;
-		break;
-		case 6:
-//			COL5_OFF;
-//			COL6_ON;
-			PORTB = PORTB << 1;
-		break;
-		case 7:
-//			COL6_OFF;
-//			COL7_ON;
-			PORTB = PORTB << 1;
-		break;
-		case 0:
-			COL7_OFF;
-			COL0_ON;
-	}
-
-	for(uint8_t i = active_col*8;i<(active_col*8+8);i++)
-	{
-		leds[i]=leds_buf[i];
-	}
-
-	col_fac = active_col * 8;
-
-	if(	leds[col_fac+0] != 0)
-	{
-		ROW0_ON;
-	}
-	if(	leds[col_fac+1] != 0)
-	{
-		ROW1_ON;
-	}
-	if(	leds[col_fac+2] != 0)
-	{
-		ROW2_ON;
-	}
-	if(	leds[col_fac+3] != 0)
-	{
-		ROW3_ON;
-	}
-	if(	leds[col_fac+4] != 0)
-	{
-		ROW4_ON;
-	}
-	if(	leds[col_fac+5] != 0)
-	{
-		ROW5_ON;
-	}
-	if(	leds[col_fac+6] != 0)
-	{
-		ROW6_ON;
-	}
-	if(	leds[col_fac+7] != 0)
-	{
-		ROW7_ON;
-	}
-	
-	
-	
-	do_something = 0;
-}
 
 int main(void)
 {
@@ -293,8 +201,14 @@ int main(void)
 	COL7_OFF;
 		
 
-	TCCR0B |= (1<<CS00);
-	TIMSK0 |= (1<<TOIE0);
+	TCCR1A |= (1<<WGM10)|(1<<WGM11);
+	TCCR1B |= (1<<WGM12)|(1<<WGM13)|(1<<CS10);
+	TIMSK1 |= (1<<TOIE1);
+	OCR1A = 0xff;
+	
+
+	
+	DDRD |= (1<<PORTD5);
 	
 
 	addr = 0;
@@ -325,10 +239,6 @@ int main(void)
 
 	while(1)
 	{
-		if(do_something==1)
-		{
-			doit();
-		}
 		if(USART0_Getc_nb(&data))
 //		if( UCSR0A & (1<<RXC0) )
 		{
@@ -398,22 +308,42 @@ int main(void)
 				}
 				else if(idx == 2)
 				{
-/*					if((pixel_x == 0) && (pixel_y == 0))
+					buffer_ready = 0;
+
+
+					if(pixel_y > 1)
 					{
-						for(uint8_t x = 0;x<64;x++)
+		
+						for(uint8_t i = 0;i < 7;i++)
 						{
-							leds_buf[x] = colors[data];
+							if(data > i)
+							{
+								colbyte_portb_b[pixel_x*7+i]|=(1<<(pixel_y-2));
+							}
+							else
+							{
+								colbyte_portb_b[pixel_x*7+i]&=~(1<<(pixel_y-2));
+							}
 						}
 					}
 					else
-					{*/
-/*						pixel_nr = pixelIsOurs(pixel_x,pixel_y);
-						if(pixel_nr)
+					{
+						for(uint8_t i = 0;i < 7;i++)
 						{
-							leds_buf[pixel_nr-1] = colors[data];
-						}*/
-						leds_buf[(pixel_y-1)*8+(pixel_x-1)] = colors[data];
-//					}
+							if(data > i)
+							{
+								colbyte_portd_b[pixel_x*7+i]|=(1<<(pixel_y+6));
+							}
+							else
+							{
+								colbyte_portd_b[pixel_x*7+i]&=~(1<<(pixel_y+6));
+							}
+						}
+					}
+					
+					buffer_ready = 1;
+					
+
 				}
 				idx++;
 				
@@ -423,10 +353,10 @@ int main(void)
 				// wait for our part of the frame
 
 
-				pixel_nr = pixelIsOurs(x_state+1,y_state+1);
+				pixel_nr = pixelIsOurs(y_state+1,x_state+1);
 				if(pixel_nr != 0)
 				{
-					leds_buf[pixel_nr-1] = colors[data];
+//					leds[pixel_nr-1] = colors[data];
 				}
 
 				y_state++;
@@ -517,6 +447,6 @@ void setLedXY(uint8_t x,uint8_t y, uint8_t brightness)
 {
     if((x < 9)&&(y<9)&&(brightness < 8))
 	{
-		leds_buf[(y-1)*8+(x-1)] = colors[brightness];
+//		leds[(y-1)*8+(x-1)] = colors[brightness];
 	}
 }
