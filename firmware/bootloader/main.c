@@ -201,7 +201,7 @@ int main(void)
 	UART_CTRL2 = UART_CTRL2_DATA;
 	
 	
-	leds_init();
+//	leds_init();
 
 	if ((BLPIN & (1<<BLPNUM)) && (GPIOR2 == 0) ) {
 

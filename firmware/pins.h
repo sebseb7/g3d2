@@ -1,0 +1,97 @@
+
+#ifndef _PINS_H
+#define _PINS_H
+
+
+#define COL0_PORT PORTD
+#define COL1_PORT PORTD
+#define COL2_PORT PORTB
+#define COL3_PORT PORTB
+#define COL4_PORT PORTB
+#define COL5_PORT PORTB
+#define COL6_PORT PORTB
+#define COL7_PORT PORTB
+ 
+#define ROW0_PORT PORTC
+#define ROW1_PORT PORTC
+#define ROW2_PORT PORTC
+#define ROW3_PORT PORTC
+#define ROW4_PORT PORTC
+#define ROW5_PORT PORTC
+#define ROW6_PORT PORTD
+#define ROW7_PORT PORTD
+
+#define COL0_DDR DDRD
+#define COL1_DDR DDRD
+#define COL2_DDR DDRB
+#define COL3_DDR DDRB
+#define COL4_DDR DDRB
+#define COL5_DDR DDRB
+#define COL6_DDR DDRB
+#define COL7_DDR DDRB
+ 
+#define ROW0_DDR DDRC
+#define ROW1_DDR DDRC
+#define ROW2_DDR DDRC
+#define ROW3_DDR DDRC
+#define ROW4_DDR DDRC
+#define ROW5_DDR DDRC
+#define ROW6_DDR DDRD
+#define ROW7_DDR DDRD
+
+#define COL0_PIN PIND6
+#define COL1_PIN PIND7
+#define COL2_PIN PINB0
+#define COL3_PIN PINB1
+#define COL4_PIN PINB2
+#define COL5_PIN PINB3
+#define COL6_PIN PINB4
+#define COL7_PIN PINB5
+ 
+#define ROW0_PIN PINC0
+#define ROW1_PIN PINC1
+#define ROW2_PIN PINC2
+#define ROW3_PIN PINC3
+#define ROW4_PIN PINC4
+#define ROW5_PIN PINC5
+#define ROW6_PIN PIND2
+#define ROW7_PIN PIND3
+
+#define ROW0_OFF ROW0_PORT |= (1<<ROW0_PIN)
+#define ROW1_OFF ROW1_PORT |= (1<<ROW1_PIN)
+#define ROW2_OFF ROW2_PORT |= (1<<ROW2_PIN)
+#define ROW3_OFF ROW3_PORT |= (1<<ROW3_PIN)
+#define ROW4_OFF ROW4_PORT |= (1<<ROW4_PIN)
+#define ROW5_OFF ROW5_PORT |= (1<<ROW5_PIN)
+#define ROW6_OFF ROW6_PORT |= (1<<ROW6_PIN)
+#define ROW7_OFF ROW7_PORT |= (1<<ROW7_PIN)
+
+#define ROW0_ON ROW0_PORT &= ~(1<<ROW0_PIN)
+#define ROW1_ON ROW1_PORT &= ~(1<<ROW1_PIN)
+#define ROW2_ON ROW2_PORT &= ~(1<<ROW2_PIN)
+#define ROW3_ON ROW3_PORT &= ~(1<<ROW3_PIN)
+#define ROW4_ON ROW4_PORT &= ~(1<<ROW4_PIN)
+#define ROW5_ON ROW5_PORT &= ~(1<<ROW5_PIN)
+#define ROW6_ON ROW6_PORT &= ~(1<<ROW6_PIN)
+#define ROW7_ON ROW7_PORT &= ~(1<<ROW7_PIN)
+
+#define COL0_ON COL0_PORT |= (1<<COL0_PIN)
+#define COL1_ON COL1_PORT |= (1<<COL1_PIN)
+#define COL2_ON COL2_PORT |= (1<<COL2_PIN)
+#define COL3_ON COL3_PORT |= (1<<COL3_PIN)
+#define COL4_ON COL4_PORT |= (1<<COL4_PIN)
+#define COL5_ON COL5_PORT |= (1<<COL5_PIN)
+#define COL6_ON COL6_PORT |= (1<<COL6_PIN)
+#define COL7_ON COL7_PORT |= (1<<COL7_PIN)
+
+#define COL0_OFF COL0_PORT &= ~(1<<COL0_PIN)
+#define COL1_OFF COL1_PORT &= ~(1<<COL1_PIN)
+#define COL2_OFF COL2_PORT &= ~(1<<COL2_PIN)
+#define COL3_OFF COL3_PORT &= ~(1<<COL3_PIN)
+#define COL4_OFF COL4_PORT &= ~(1<<COL4_PIN)
+#define COL5_OFF COL5_PORT &= ~(1<<COL5_PIN)
+#define COL6_OFF COL6_PORT &= ~(1<<COL6_PIN)
+#define COL7_OFF COL7_PORT &= ~(1<<COL7_PIN)
+
+
+#endif
