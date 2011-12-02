@@ -15,13 +15,16 @@
 typedef void (*AppPtr_t)(void) __attribute__ ((noreturn)); 
 
 uint8_t pixelIsOurs(uint8_t,uint8_t);
+void doit(void);
 
 uint8_t active_col = 1;
 
+uint8_t volatile do_something = 0;
 uint8_t addr = 0;
 uint8_t module_row = 0;
 uint8_t module_column = 0;
 
+uint8_t colors[8] = { 0,1,2,4,8,20,40,70 };
 
 uint8_t leds[64] = {
 	0,0,0,0,0,0,0,0,
@@ -45,80 +48,83 @@ uint8_t volatile leds_buf[64] = {
 	0,0,0,0,0,0,0,0,
 };
 
-uint8_t cycle = 0;
-uint8_t volatile led_mode = 0;
+uint8_t volatile cycle = 0;
 
-uint8_t volatile frame_update = 0;
 ISR (TIMER0_OVF_vect)
 {
 
-
-	cycle++;
-
-	if(
-		(cycle != 0)&&
-		(cycle != 1)&&
-		(cycle != 2)&&
-		(cycle != 4)&&
-		(cycle != 8)&&
-		(cycle != 20)&&
-		(cycle != 40)&&
-		(cycle != 70)
-	)
+	if(do_something == 0)
 	{
-		return;
-	}
-//		ROW0_OFF;
+		do_something = 1;
+		cycle++;
 
+		if(
+			(cycle != 1)&&
+			(cycle != 2)&&
+			(cycle != 4)&&
+			(cycle != 8)&&
+			(cycle != 20)&&
+			(cycle != 40)&&
+			(cycle != 70)
+		)
+		{
+			do_something = 0;
+			return;
+		}
+
+		if(cycle == 70)
+		{
+			cycle = 0;
+		}
 	
 
-	if(cycle == 70)
-	{
-		cycle = 0;
 	}
+}
+
+void doit()
+{
+	uint8_t col_fac = active_col * 8;
 
 	
 	if(cycle != 0)
 	{
-		if(	leds[active_col*8+0] == cycle)
+		if(	leds[col_fac+0] == cycle)
 		{
 			ROW0_OFF;
 		}
-		if(	leds[active_col*8+1] == cycle)
+		if(	leds[col_fac+1] == cycle)
 		{
 			ROW1_OFF;
 		}
-		if(	leds[active_col*8+2] == cycle)
+		if(	leds[col_fac+2] == cycle)
 		{
 			ROW2_OFF;
 		}
-		if(	leds[active_col*8+3] == cycle)
+		if(	leds[col_fac+3] == cycle)
 		{
 			ROW3_OFF;
 		}
-		if(	leds[active_col*8+4] == cycle)
+		if(	leds[col_fac+4] == cycle)
 		{
 			ROW4_OFF;
 		}
-		if(	leds[active_col*8+5] == cycle)
+		if(	leds[col_fac+5] == cycle)
 		{
 			ROW5_OFF;
 		}
-		if(	leds[active_col*8+6] == cycle)
+		if(	leds[col_fac+6] == cycle)
 		{
 			ROW6_OFF;
 		}
-		if(	leds[active_col*8+7] == cycle)
+		if(	leds[col_fac+7] == cycle)
 		{
 			ROW7_OFF;
 		}
 	
-
-//		ROW0_ON;
+		do_something = 0;
 		return;
 	}
-	
-	
+
 
 	ROW0_OFF;
 	ROW1_OFF;
@@ -134,10 +140,6 @@ ISR (TIMER0_OVF_vect)
 	if(active_col == 8)
 	{
 		active_col = 0;
-		if(frame_update > 0)
-		{
-			frame_update--;
-		}
 	}
 	
 	
@@ -177,66 +179,53 @@ ISR (TIMER0_OVF_vect)
 			COL0_ON;
 	}
 
-	for(uint8_t i = 0;i<64;i++)
+	for(uint8_t i = active_col*8;i<(active_col*8+8);i++)
 	{
 		leds[i]=leds_buf[i];
 	}
-                                    
-	
-	if(	leds[active_col*8+0] != 0)
+
+	col_fac = active_col * 8;
+
+	if(	leds[col_fac+0] != 0)
 	{
 		ROW0_ON;
 	}
-	if(	leds[active_col*8+1] != 0)
+	if(	leds[col_fac+1] != 0)
 	{
 		ROW1_ON;
 	}
-	if(	leds[active_col*8+2] != 0)
+	if(	leds[col_fac+2] != 0)
 	{
 		ROW2_ON;
 	}
-	if(	leds[active_col*8+3] != 0)
+	if(	leds[col_fac+3] != 0)
 	{
 		ROW3_ON;
 	}
-	if(	leds[active_col*8+4] != 0)
+	if(	leds[col_fac+4] != 0)
 	{
 		ROW4_ON;
 	}
-	if(	leds[active_col*8+5] != 0)
+	if(	leds[col_fac+5] != 0)
 	{
 		ROW5_ON;
 	}
-	if(	leds[active_col*8+6] != 0)
+	if(	leds[col_fac+6] != 0)
 	{
 		ROW6_ON;
 	}
-	if(	leds[active_col*8+7] != 0)
+	if(	leds[col_fac+7] != 0)
 	{
 		ROW7_ON;
 	}
 	
-
-//	ROW0_ON;
+	
+	
+	do_something = 0;
 }
-
-ISR (PCINT2_vect)
-{
-	led_mode++;
-	if(led_mode > 9)
-	{
-		led_mode = 0;
-	}
-}
-                
-
 
 int main(void)
 {
-	PORTD |= (1<<PORTD7);
-	PCMSK2 |= (1<<PCINT21);
-	PCICR = (1<<PCIE2);
-
 	ROW0_DDR |= (1<<ROW0_PIN);
 	ROW1_DDR |= (1<<ROW1_PIN);
 	ROW2_DDR |= (1<<ROW2_PIN);
@@ -279,8 +268,13 @@ int main(void)
 	TCCR0B |= (1<<CS00);
 	TIMSK0 |= (1<<TOIE0);
 	
-	sei();
 
+	addr = 0;
+	module_column = addr % (DISPLAY_WIDTH/8);
+	module_row    = (addr - module_column) / (DISPLAY_HEIGHT/8);
+	
+	
+	sei();
 
 
 	USART0_Init();
@@ -288,30 +282,30 @@ int main(void)
 	
     uint8_t pixel_x = 0;
     uint8_t pixel_y = 0;
-    uint8_t pixel_g = 0;
     uint8_t pixel_nr = 0;
-
-    uint8_t frameBuffer[16*3];
-    for(uint8_t i = 0;i<(16*3);i++)
-    {
-        frameBuffer[i]=0;
-    }
-
 
 	uint8_t data = 0;  
 	uint8_t state = 0;
 	uint8_t escape = 0;
 	uint8_t idx = 0;
-	uint8_t color_state = 0;
 	uint8_t x_state = 0;
 	uint8_t y_state = 0;
-	setLedXY(1,1,4);
+	setLedXY(1,1,1);
+
+	setLedXY(0,0,7);
 
 
 	while(1)
 	{
-		if(USART0_Getc_nb(&data))
+		if(do_something==1)
 		{
+			doit();
+		}
+		if(USART0_Getc_nb(&data))
+//		if( UCSR0A & (1<<RXC0) )
+		{
+//			data = UDR0;
+
 
 			if(data == 0x42)
 			{
@@ -320,27 +314,27 @@ int main(void)
 				idx = 0;
 				continue;
 			}
-			if(data == 0x23)
+			else if(data == 0x23)
 			{
 				// full frame
 				state = 2;
 
-				color_state = 0;
 				x_state = 0;
 				y_state = 0;
 				continue;
 			}
-			if(data == 0x65)
+			else if(data == 0x65)
 			{
 				escape = 1;
 				continue;
 			}
-			if(data == 0x66)
+			else if(data == 0x66)
 			{
 				// bootloader
 				state = 3;
 				continue;
 			}
+			
 			if(escape == 1)
 			{
 				escape = 0;
@@ -370,31 +364,32 @@ int main(void)
 				{
 					pixel_x = data;
 				}
-				if(idx == 1)
+				else if(idx == 1)
 				{
 					pixel_y = data;
 				}
-				if(idx == 2)
+				else if(idx == 2)
 				{
-					pixel_g = data;
-/*					if((pixel_x == 0) && (pixel_y == 0))
+					if((pixel_x == 0) && (pixel_y == 0))
 					{
-						setLedXY(0,0,pixel_g);
+						for(uint8_t x = 0;x<64;x++)
+						{
+							leds_buf[x] = colors[data];
+						}
 					}
 					else
 					{
-						pixel_nr = pixelIsOurs(pixel_x,pixel_y);*/
-						setLedXY(pixel_x,pixel_y,pixel_g);
-/*						if(pixel_nr != 0)
+						pixel_nr = pixelIsOurs(pixel_x,pixel_y);
+						if(pixel_nr)
 						{
+							leds_buf[pixel_nr-1] = colors[data];
 						}
-					}*/
+					}
 				}
 				idx++;
 				
 			}
-
-			if(state == 2)
+			else if(state == 2)
 			{
 				// wait for our part of the frame
 
@@ -402,27 +397,18 @@ int main(void)
 				pixel_nr = pixelIsOurs(x_state+1,y_state+1);
 				if(pixel_nr != 0)
 				{
-						frameBuffer[((pixel_nr-1)*3)+color_state] = data;
+					leds_buf[pixel_nr-1] = colors[data];
 				}
-				
-				color_state++;
-				if(color_state == 3) 
-				{
-					color_state = 0;
-					y_state++;
-				}
+
+				y_state++;
+
 				if(y_state == DISPLAY_WIDTH)
 				{
 					y_state=0;
 					x_state++;
 				}
-				if(x_state == DISPLAY_HEIGHT)
-				{
-//					SetAllLeds(frameBuffer);
-				}
 			}
-
-			if(state == 3)
+			else if(state == 3)
 			{
 				if(data == 0xff)
 				{
@@ -473,41 +459,35 @@ int main(void)
 	}
 }
 
-//returns 0 if that pixel is not on out tile, otherwise LED number (1..16)
+//returns 0 if that pixel is not on out tile, otherwise LED number (1..64)
 uint8_t pixelIsOurs(uint8_t x,uint8_t y)
 {
 	x--;
 	y--;
 	
 	if( 
-		(x >=  module_row      *4) && 
-		(x <  (module_row+1)   *4) &&
-		(y >=  module_column   *4) && 
-		(y <  (module_column+1)*4)
+		(x >=  module_row      *8) && 
+		(x <  (module_row+1)   *8) &&
+		(y >=  module_column   *8) && 
+		(y <  (module_column+1)*8)
 	)
 	{
-		uint8_t row = x - module_row*4;
-		uint8_t col = y - module_column*4;
+		uint8_t row = x - module_row*8;
+		uint8_t col = y - module_column*8;
 	
 		
 	
-		return row*4+col+1;
+		return col*8+row+1;
 	} 
 
 	return 0;
 }
 
+
 void setLedXY(uint8_t x,uint8_t y, uint8_t brightness)
 {
-    if((x < 8)&&(y<8)&&(brightness < 8))
+    if((x < 9)&&(y<9)&&(brightness < 8))
 	{
-        if(brightness == 0) leds_buf[y*8+x] = 0;
-		if(brightness == 1) leds_buf[y*8+x] = 1;
-		if(brightness == 2) leds_buf[y*8+x] = 2;
-		if(brightness == 3) leds_buf[y*8+x] = 4;
-		if(brightness == 4) leds_buf[y*8+x] = 8;
-		if(brightness == 5) leds_buf[y*8+x] = 20;
-		if(brightness == 6) leds_buf[y*8+x] = 40;
-		if(brightness == 7) leds_buf[y*8+x] = 70;
+		leds_buf[(y-1)*8+(x-1)] = colors[brightness];
 	}
 }

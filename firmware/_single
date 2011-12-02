@@ -18,17 +18,21 @@ while(1)
 #	my $return=$port->write(chr(66).chr(00).chr(00).chr(0).chr(0).chr(255));
 #warn $port->read(1);
 
-	foreach my $x (0..7)
+	foreach my $x (1..8)
 	{
-		foreach my $y (0..7)
+		foreach my $y (1..8)
 		{
-			my $return=$port->write(chr(66).chr($y).chr($x).chr($g));
+#			warn $g;
+			my $c = $g;
+			$c = 15-$c if $g > 7;
+			my $return=$port->write(chr(66).chr($y).chr($x).chr(($x-1)));
+#			my $return=$port->write(chr(66).chr($y).chr($x).chr(($x*$y/8)));
 			$port->read(1);
-			usleep(500);
+			usleep(180);
 		}
 	}
 	$g++;
-	$g = 0 if $g==8;
+	$g = 0 if $g==16;
 #	sleep(1);
 }
 			close($port);
