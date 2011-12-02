@@ -67,8 +67,6 @@ uint8_t steps[7] = {1,2,4,12,20,30,1};
 uint8_t rowbyte_portc[8] = {~1,~2,~4,~8,~16,~32,~0,~0};
 uint8_t rowbyte_portd[8] = {12,12,12,12,12 ,12 ,8,4};
 
-uint8_t buffer_ready = 1;
-
 uint8_t colbyte_portb[56]={
 							0,0,0,0,0,0,0,
 							0,0,0,0,0,0,0,
@@ -286,42 +284,7 @@ int main(void)
 				}
 				else if(idx == 2)
 				{
-					buffer_ready = 0;
-
-
-					if(pixel_y > 1)
-					{
-		
-						for(uint8_t i = 0;i < 7;i++)
-						{
-							if(data > i)
-							{
-								colbyte_portb[pixel_x*7+i]|=(1<<(pixel_y-2));
-							}
-							else
-							{
-								colbyte_portb[pixel_x*7+i]&=~(1<<(pixel_y-2));
-							}
-						}
-					}
-					else
-					{
-						for(uint8_t i = 0;i < 7;i++)
-						{
-							if(data > i)
-							{
-								colbyte_portd[pixel_x*7+i]|=(1<<(pixel_y+6));
-							}
-							else
-							{
-								colbyte_portd[pixel_x*7+i]&=~(1<<(pixel_y+6));
-							}
-						}
-					}
-					
-					buffer_ready = 1;
-					
-
+					setLedXY(pixel_x,pixel_y,data);
 				}
 				idx++;
 				
@@ -423,8 +386,40 @@ uint8_t pixelIsOurs(uint8_t x,uint8_t y)
 
 void setLedXY(uint8_t x,uint8_t y, uint8_t brightness)
 {
-    if((x < 9)&&(y<9)&&(brightness < 8))
-	{
-//		leds[(y-1)*8+(x-1)] = colors[brightness];
-	}
+					if(y > 1)
+					{
+		
+						for(uint8_t i = 0;i < 7;i++)
+						{
+							if(brightness > i)
+							{
+								colbyte_portb[x*7+i]|=(1<<(y-2));
+							}
+							else
+							{
+								colbyte_portb[x*7+i]&=~(1<<(y-2));
+							}
+						}
+					}
+					else
+					{
+						for(uint8_t i = 0;i < 7;i++)
+						{
+							if(brightness > i)
+							{
+								colbyte_portd[x*7+i]|=(1<<(y+6));
+							}
+							else
+							{
+								colbyte_portd[x*7+i]&=~(1<<(y+6));
+							}
+						}
+					}
+
+
+//    if((x < 9)&&(y<9)&&(brightness < 8))
+//	{
+
+
+//	}
 }
