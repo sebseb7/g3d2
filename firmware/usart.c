@@ -11,24 +11,10 @@ volatile static uint8_t *volatile rxhead0, *volatile rxtail0;
 volatile uint8_t xon = 0;
 
 
-ISR (USART_RX_vect)//,ISR_NAKED)
+ISR (USART_RX_vect)
 {
-//	PORTD |= (1<<PORTD5);
-	
 	UCSR0B &= ~(1 << RXCIE0);
  	asm volatile("sei");
-/*	asm volatile("push __zero_reg__");
-	asm volatile("push r0");
-	asm volatile("in r0,__SREG__");
-	asm volatile("push r0");
-	asm volatile("clr __zero_reg__");
-	asm volatile("push r18");
-	asm volatile("push r19");
-	asm volatile("push r20");
-	asm volatile("push r24");
-	asm volatile("push r25");
-	asm volatile("push r30");
-	asm volatile("push r31");*/
 	
         int diff;
         uint8_t c;
@@ -41,20 +27,7 @@ ISR (USART_RX_vect)//,ISR_NAKED)
             ++rxhead0;
             if (rxhead0 == (rxbuf0 + UART_RXBUFSIZE)) rxhead0 = rxbuf0;
         }
-/*	asm volatile("pop r31");
-	asm volatile("pop r30");
-	asm volatile("pop r25");
-	asm volatile("pop r24");
-	asm volatile("pop r20");
-	asm volatile("pop r19");
-	asm volatile("pop r18");
-	asm volatile("pop r0");
-	asm volatile("out __SREG__,r0");
-	asm volatile("pop r0");
-	asm volatile("pop __zero_reg__");*/
 	UCSR0B |= (1 << RXCIE0);
-//	asm volatile("reti");
-//	PORTD &= ~(1<<PORTD5);
 }
 
 

@@ -25,7 +25,7 @@ my $z = 0;
 
 while(1)
 {
-	$z+=0.01;
+	$z+=0.010;
 	$port->write(chr(35));
 	my $time1 = time;
  
@@ -36,17 +36,18 @@ while(1)
 		for my $y (0..7)
 		{
 	
-			my $num = abs sin($x*3-cos($z*3))*15;
-			$num += abs sin($y*3-cos($z))*6 + cos($y*3-sin($z*2))*8;
+			my $num = abs sin($x*3+4*cos($z))*40*sin($z*2);
+			$num += abs sin($y*3-3*cos($z/2))*30 + cos($y*3-sin($z*3))*25;
 #			$num += sin($z);	
 		
-			$num = int($num)%16;
+			$num = int($num)%32;
 		
-			if($num > 7)
+			if($num > 15)
 			{
-				$num = 16-$num;
+				$num = 32-$num;
 			}
 
+			$num=1 if $num==0;
 			$str.=chr($num);
 #			$str.=chr(1);
 		}
@@ -54,7 +55,7 @@ while(1)
 	
 	}
 
-	usleep(4000);
+	usleep(10000);
 
 	warn 1 / (time - $time1);
 }

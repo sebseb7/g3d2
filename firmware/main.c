@@ -11,36 +11,13 @@
 
 /* 
 
-	new new idea:
-	
-	- 3 ports == 3 bytes a 64 states (2 bytes setzen, 1 bytes verunden)
-	- 64 dynamische interrupts ueber 16bit timer mit variabler laufzeit.
-	
-	- doppelte (dreifache?)anzahl buffers (in einen buffer schreiben die uats, aus dem anderen lesen die ints)
-	- nach je 64 zyklen umschalten
+	todo:
 
-	- uat interrupt: disable uart int bit, renable global interrupt, at the end of uart , reenable uart
-	- check wiht oszi
-	- try to skip full frame bytes in uart int
-	- other type of ringbuffer ? check uart int runtime agains bytes in p
+	- pack one line in three bytes
+	- module shift
+	- addr selection (select addr with button, save to eeprom)
 
-
-70 40 20 8 4 2 1
-
-	new idea:
-	
-	cycle0: active all full on LEDs
-	cycle10: copy buffer
-	cycle20: activate all 6/7 leds
-	cycle40: activate all 5/7 leds
-	cycle62: activate all 4/7 leds
-	cycle66: activate all 3/7 leds
-	cycle68: activate all 2/7 leds
-	cycle69: activate all 1/7 leds
-	cycle70: all OUT
-	cycle71: cycle = 0
 */
-
 
 #define DISPLAY_WIDTH 72
 #define DISPLAY_HEIGHT 32
@@ -48,8 +25,6 @@
 typedef void (*AppPtr_t)(void) __attribute__ ((noreturn)); 
 
 uint8_t pixelIsOurs(uint8_t,uint8_t);
-
-
 
 uint8_t addr = 0;
 uint8_t module_row = 0;
@@ -62,33 +37,33 @@ uint8_t pixel_step = 0;
 uint8_t pixel_step2 = 0;
 uint8_t row_step = 0;
 
-uint8_t steps[7] = {1,2,4,12,20,30,1};
+uint8_t steps[15] = {1,1,2,2,2,2,3,4,6,7,11,18,30,50,1};
 
 uint8_t rowbyte_portc[8] = {~1,~2,~4,~8,~16,~32,~0,~0};
 uint8_t rowbyte_portd[8] = {12,12,12,12,12 ,12 ,8,4};
 
 uint8_t bufferfree = 1;
 
-uint8_t colbyte_portb[56]={
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
+uint8_t colbyte_portb[120]={
+							0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 							};
 
-uint8_t colbyte_portd[56]={
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
+uint8_t colbyte_portd[120]={
+							0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 							};
 
 /*uint8_t colbyte_portb1[56]={
@@ -117,7 +92,7 @@ uint8_t colbyte_portd1[56]={
 
 ISR (TIMER1_OVF_vect)
 {
-	OCR1A = 0xff*steps[pixel_step];
+	OCR1A = 0x50*steps[pixel_step];
 
 
 	uint8_t y = PORTD;
@@ -147,7 +122,7 @@ ISR (TIMER1_OVF_vect)
 	pixel_step++;
 	pixel_step2++;
 	
-	if(pixel_step == 7)
+	if(pixel_step == 15)
 	{
 		pixel_step = 0;
 		row_step++;
@@ -214,7 +189,7 @@ int main(void)
 	TCCR1A |= (1<<WGM10)|(1<<WGM11);
 	TCCR1B |= (1<<WGM12)|(1<<WGM13)|(1<<CS10);
 	TIMSK1 |= (1<<TOIE1);
-	OCR1A = 0xff;
+	OCR1A = 0x50;
 	
 
 	
@@ -407,29 +382,29 @@ void setLedXY(uint8_t x,uint8_t y, uint8_t brightness)
 {
 	if(y > 1)
 	{
-		for(uint8_t i = 0;i < 7;i++)
+		for(uint8_t i = 0;i < 15;i++)
 		{
 			if(brightness > i)
 			{
-				colbyte_portb[x*7+i]|=(1<<(y-2));
+				colbyte_portb[x*15+i]|=(1<<(y-2));
 			}
 			else
 			{
-				colbyte_portb[x*7+i]&=~(1<<(y-2));
+				colbyte_portb[x*15+i]&=~(1<<(y-2));
 			}
 		}
 	}
 	else
 	{
-		for(uint8_t i = 0;i < 7;i++)
+		for(uint8_t i = 0;i < 15;i++)
 		{
 			if(brightness > i)
 			{
-				colbyte_portd[x*7+i]|=(1<<(y+6));
+				colbyte_portd[x*15+i]|=(1<<(y+6));
 			}
 			else
 			{
-				colbyte_portd[x*7+i]&=~(1<<(y+6));
+				colbyte_portd[x*15+i]&=~(1<<(y+6));
 			}
 		}
 	}
