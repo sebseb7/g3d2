@@ -25,38 +25,22 @@ my $z = 0;
 
 while(1)
 {
-	$z+=0.01;
-	$port->write(chr(35));
 	my $time1 = time;
- 
-
-	for my $x (0..287)
+	$port->write(chr(35));
+	for(0..72)
 	{
-		my $str;
-		for my $y (0..7)
-		{
-	
-			my $num = abs sin($x*3-cos($z*3))*15;
-			$num += abs sin($y*3-cos($z))*6 + cos($y*3-sin($z*2))*8;
-#			$num += sin($z);	
-		
-			$num = int($num)%16;
-		
-			if($num > 7)
-			{
-				$num = 16-$num;
-			}
-
-			$str.=chr($num);
-#			$str.=chr(1);
-		}
-		$port->write(esc($str));
-	
+		$port->write(esc(chr(0) x 32));
 	}
+	usleep(5000);
 
-	usleep(4000);
+	$port->write(chr(35));
+	for(0..72)
+	{
+		$port->write(esc(chr(7) x 32));
+	}
+	usleep(5000);
 
-	warn 1 / (time - $time1);
+	warn (1 / (time - $time1))*2;
 }
 
 $port->close();

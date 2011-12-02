@@ -67,6 +67,8 @@ uint8_t steps[7] = {1,2,4,12,20,30,1};
 uint8_t rowbyte_portc[8] = {~1,~2,~4,~8,~16,~32,~0,~0};
 uint8_t rowbyte_portd[8] = {12,12,12,12,12 ,12 ,8,4};
 
+uint8_t bufferfree = 1;
+
 uint8_t colbyte_portb[56]={
 							0,0,0,0,0,0,0,
 							0,0,0,0,0,0,0,
@@ -89,6 +91,28 @@ uint8_t colbyte_portd[56]={
 							0,0,0,0,0,0,0,
 							};
 
+/*uint8_t colbyte_portb1[56]={
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							};
+
+uint8_t colbyte_portd1[56]={
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							0,0,0,0,0,0,0,
+							};
+*/
 
 
 ISR (TIMER1_OVF_vect)
@@ -131,6 +155,16 @@ ISR (TIMER1_OVF_vect)
 		{
 			row_step=0;
 			pixel_step2 = 0;
+			
+			if(bufferfree == 1)
+			{
+			
+/*				for(uint8_t i=0;i<56;i++)
+				{
+					colbyte_portd[i]=colbyte_portd1[i];
+					colbyte_portb[i]=colbyte_portb1[i];
+				}
+*/			}
 		}
 	}
 }
@@ -218,7 +252,6 @@ int main(void)
 		if(USART0_Getc_nb(&data))
 //		if( UCSR0A & (1<<RXC0) )
 		{
-			PORTD |= (1<<PORTD5);
 //			data = UDR0;
 
 
@@ -227,7 +260,6 @@ int main(void)
 				// single pixel
 				state = 1;
 				idx = 0;
-		PORTD &= ~(1<<PORTD5);
 				continue;
 			}
 			else if(data == 0x23)
@@ -235,23 +267,22 @@ int main(void)
 				// full frame
 				state = 2;
 
+//				bufferfree = 0;
+
 				x_state = 0;
 				y_state = 0;
 				mod_state = 0;
-		PORTD &= ~(1<<PORTD5);
 				continue;
 			}
 			else if(data == 0x65)
 			{
 				escape = 1;
-		PORTD &= ~(1<<PORTD5);
 				continue;
 			}
 			else if(data == 0x66)
 			{
 				// bootloader
 				state = 3;
-		PORTD &= ~(1<<PORTD5);
 				continue;
 			}
 			
@@ -302,6 +333,11 @@ int main(void)
 				{
 					setLedXY(x_state,y_state,data);
 				}
+				else
+				{
+//					bufferfree = 1;
+				}
+				
 
 				y_state++;
 
@@ -362,7 +398,6 @@ int main(void)
 				}
 				state = 0;
 			}
-		PORTD &= ~(1<<PORTD5);
 		}
 	}
 }
