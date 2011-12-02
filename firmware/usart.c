@@ -13,6 +13,7 @@ volatile uint8_t xon = 0;
 
 ISR (USART_RX_vect)//,ISR_NAKED
 {
+//	PORTD |= (1<<PORTD5);
 /*	asm volatile("push r24");
 	UCSR0B &= ~(1 << RXCIE0);
  	asm volatile("sei");
@@ -42,7 +43,12 @@ ISR (USART_RX_vect)//,ISR_NAKED
 			{
 				xon=1;
 				//set the CTS pin
+//				PORTD &= ~(1<<PORTD5);
 			}
+        }
+        else
+        {
+//			PORTD ^= (1<<PORTD5);
         }
 /*	asm volatile("pop r31");
 	asm volatile("pop r30");
@@ -57,6 +63,7 @@ ISR (USART_RX_vect)//,ISR_NAKED
 	UCSR0B |= (1 << RXCIE0);
 	asm volatile("pop r24");
 	asm volatile("reti");*/
+//	PORTD &= ~(1<<PORTD5);
 }
 
 
@@ -118,6 +125,7 @@ uint8_t USART0_Getc_nb(uint8_t *c)
 	{
 		xon=0;
 		//set the CTS pin
+//		PORTD |= (1<<PORTD5);
 	}
 
     return 1;

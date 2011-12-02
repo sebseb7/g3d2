@@ -200,7 +200,6 @@ int main(void)
 	
     uint8_t pixel_x = 0;
     uint8_t pixel_y = 0;
-    uint8_t pixel_nr = 0;
 
 	uint8_t data = 0;  
 	uint8_t state = 0;
@@ -208,9 +207,10 @@ int main(void)
 	uint8_t idx = 0;
 	uint8_t x_state = 0;
 	uint8_t y_state = 0;
-	setLedXY(1,1,1);
+	uint8_t mod_state = 0;
+//	setLedXY(1,1,1);
 
-	setLedXY(0,0,7);
+//	setLedXY(0,0,7);
 
 
 	while(1)
@@ -218,6 +218,7 @@ int main(void)
 		if(USART0_Getc_nb(&data))
 //		if( UCSR0A & (1<<RXC0) )
 		{
+			PORTD |= (1<<PORTD5);
 //			data = UDR0;
 
 
@@ -226,6 +227,7 @@ int main(void)
 				// single pixel
 				state = 1;
 				idx = 0;
+		PORTD &= ~(1<<PORTD5);
 				continue;
 			}
 			else if(data == 0x23)
@@ -235,17 +237,21 @@ int main(void)
 
 				x_state = 0;
 				y_state = 0;
+				mod_state = 0;
+		PORTD &= ~(1<<PORTD5);
 				continue;
 			}
 			else if(data == 0x65)
 			{
 				escape = 1;
+		PORTD &= ~(1<<PORTD5);
 				continue;
 			}
 			else if(data == 0x66)
 			{
 				// bootloader
 				state = 3;
+		PORTD &= ~(1<<PORTD5);
 				continue;
 			}
 			
@@ -291,21 +297,23 @@ int main(void)
 			}
 			else if(state == 2)
 			{
-				// wait for our part of the frame
 
-
-				pixel_nr = pixelIsOurs(y_state+1,x_state+1);
-				if(pixel_nr != 0)
+				if(mod_state == 0)
 				{
-//					leds[pixel_nr-1] = colors[data];
+					setLedXY(x_state,y_state,data);
 				}
 
 				y_state++;
 
-				if(y_state == DISPLAY_WIDTH)
+				if(y_state == 8)
 				{
 					y_state=0;
 					x_state++;
+					if(x_state == 8)
+					{
+						x_state=0;
+						mod_state++;
+					}
 				}
 			}
 			else if(state == 3)
@@ -354,72 +362,40 @@ int main(void)
 				}
 				state = 0;
 			}
-
+		PORTD &= ~(1<<PORTD5);
 		}
 	}
-}
-
-//returns 0 if that pixel is not on out tile, otherwise LED number (1..64)
-uint8_t pixelIsOurs(uint8_t x,uint8_t y)
-{
-	x--;
-	y--;
-	
-	if( 
-		(x >=  module_row      *8) && 
-		(x <  (module_row+1)   *8) &&
-		(y >=  module_column   *8) && 
-		(y <  (module_column+1)*8)
-	)
-	{
-		uint8_t row = x - module_row*8;
-		uint8_t col = y - module_column*8;
-	
-		
-	
-		return col*8+row+1;
-	} 
-
-	return 0;
 }
 
 
 void setLedXY(uint8_t x,uint8_t y, uint8_t brightness)
 {
-					if(y > 1)
-					{
-		
-						for(uint8_t i = 0;i < 7;i++)
-						{
-							if(brightness > i)
-							{
-								colbyte_portb[x*7+i]|=(1<<(y-2));
-							}
-							else
-							{
-								colbyte_portb[x*7+i]&=~(1<<(y-2));
-							}
-						}
-					}
-					else
-					{
-						for(uint8_t i = 0;i < 7;i++)
-						{
-							if(brightness > i)
-							{
-								colbyte_portd[x*7+i]|=(1<<(y+6));
-							}
-							else
-							{
-								colbyte_portd[x*7+i]&=~(1<<(y+6));
-							}
-						}
-					}
-
-
-//    if((x < 9)&&(y<9)&&(brightness < 8))
-//	{
-
-
-//	}
+	if(y > 1)
+	{
+		for(uint8_t i = 0;i < 7;i++)
+		{
+			if(brightness > i)
+			{
+				colbyte_portb[x*7+i]|=(1<<(y-2));
+			}
+			else
+			{
+				colbyte_portb[x*7+i]&=~(1<<(y-2));
+			}
+		}
+	}
+	else
+	{
+		for(uint8_t i = 0;i < 7;i++)
+		{
+			if(brightness > i)
+			{
+				colbyte_portd[x*7+i]|=(1<<(y+6));
+			}
+			else
+			{
+				colbyte_portd[x*7+i]&=~(1<<(y+6));
+			}
+		}
+	}
 }
