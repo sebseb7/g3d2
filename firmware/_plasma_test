@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 use Device::SerialPort;
-use Time::HiRes qw(usleep time);
+use Time::HiRes qw(usleep time sleep);
 
 use strict;
 
@@ -30,12 +30,21 @@ while(1)
 	my $time1 = time;
  
 
-	for my $x (0..287)
+	my $pixel = 0;
+	my $mod = 0;
+	while(1)
 	{
+
 		my $str;
-		for my $y (0..7)
+		foreach my $i (0..7)
 		{
-	
+			
+			my $x = ($pixel % 8)+(($mod%9)*8);
+#			warn $x;
+
+			my $y= ($pixel-($pixel%8))/8;
+#warn $pixel.':'.$x.':'.$y.':'.$mod;
+#sleep(0.3);
 			my $num = abs sin($x*3+4*cos($z))*40*sin($z*2);
 			$num += abs sin($y*3-3*cos($z/2))*30 + cos($y*3-sin($z*3))*25;
 #			$num += sin($z);	
@@ -49,9 +58,36 @@ while(1)
 
 			$num=1 if $num==0;
 			$str.=chr($num);
-#			$str.=chr(1);
+#			$str.=chr($y*2);
+
+			if(($x == 8)and($y==2))
+			{
+		#		$str.=chr(15);
+		#		die;
+				
+			}
+			elsif(($x == 0)and($y==0))
+			{
+		#		$str.=chr(15);
+			}
+			else
+			{
+		#		$str.=chr(0);
+			}
+			$pixel++;
 		}
 		$port->write(esc($str));
+		
+		if($pixel == 64)
+		{
+			$mod++;
+			$pixel=0;
+			if($mod == 32)
+			{
+				last;
+			}
+		}
+		
 	
 	}
 

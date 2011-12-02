@@ -1,6 +1,6 @@
 PROJECT=g3d2_bl
 
-MCU = atmega88pa
+MCU = atmega88
 MCU_AVRDUDE = atmega88
 
 

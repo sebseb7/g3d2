@@ -19,7 +19,7 @@ typedef uint16_t pagebuf_t;
 typedef uint8_t pagebuf_t;
 #endif
 
-#if defined(__AVR_ATmega88PA__)
+#if defined(__AVR_ATmega88__)
 #include "mega88.h"
 
 #else

@@ -26,18 +26,14 @@ typedef void (*AppPtr_t)(void) __attribute__ ((noreturn));
 
 uint8_t pixelIsOurs(uint8_t,uint8_t);
 
-uint8_t addr = 0;
-uint8_t module_row = 0;
-uint8_t module_column = 0;
-
-
+uint8_t addr = 1;
 
 //these variabled are used by the timer intr
 uint8_t pixel_step = 0;
 uint8_t pixel_step2 = 0;
 uint8_t row_step = 0;
 
-uint8_t steps[15] = {1,1,2,2,2,2,3,4,6,7,11,18,30,50,1};
+uint8_t steps[15] = {1,1,1,1,1,2,3,4,6,7,11,18,30,50,1};
 
 uint8_t rowbyte_portc[8] = {~1,~2,~4,~8,~16,~32,~0,~0};
 uint8_t rowbyte_portd[8] = {12,12,12,12,12 ,12 ,8,4};
@@ -191,15 +187,7 @@ int main(void)
 	TIMSK1 |= (1<<TOIE1);
 	OCR1A = 0x50;
 	
-
-	
 	DDRD |= (1<<PORTD5);
-	
-
-	addr = 0;
-	module_column = addr % (DISPLAY_WIDTH/8);
-	module_row    = (addr - module_column) / (DISPLAY_HEIGHT/8);
-	
 	
 	sei();
 
@@ -304,7 +292,7 @@ int main(void)
 			else if(state == 2)
 			{
 
-				if(mod_state == 0)
+				if(mod_state == addr)
 				{
 					setLedXY(x_state,y_state,data);
 				}
