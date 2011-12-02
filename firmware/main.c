@@ -69,7 +69,7 @@ uint8_t rowbyte_portd[8] = {12,12,12,12,12 ,12 ,8,4};
 
 uint8_t buffer_ready = 1;
 
-uint8_t colbyte_portb_a[56]={
+uint8_t colbyte_portb[56]={
 							0,0,0,0,0,0,0,
 							0,0,0,0,0,0,0,
 							0,0,0,0,0,0,0,
@@ -80,7 +80,7 @@ uint8_t colbyte_portb_a[56]={
 							0,0,0,0,0,0,0,
 							};
 
-uint8_t volatile colbyte_portb_b[56]={
+uint8_t colbyte_portd[56]={
 							0,0,0,0,0,0,0,
 							0,0,0,0,0,0,0,
 							0,0,0,0,0,0,0,
@@ -91,37 +91,26 @@ uint8_t volatile colbyte_portb_b[56]={
 							0,0,0,0,0,0,0,
 							};
 
-uint8_t colbyte_portd_a[56]={
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							};
-
-uint8_t volatile colbyte_portd_b[56]={
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							};
 
 
 ISR (TIMER1_OVF_vect)
 {
 	OCR1A = 0xff*steps[pixel_step];
 
-	PORTB = colbyte_portb_a[pixel_step2];
+
 	uint8_t y = PORTD;
+
+	if (pixel_step == 0)
+	{
+		PORTC = 0xff;
+		y |= ((1<<PORTD2)|(1<<PORTD3));
+		PORTD = y;
+	}
+
+
+	PORTB = colbyte_portb[pixel_step2];
 	y &= ~((1<<PORTD6)|(1<<PORTD7));
-	y |= colbyte_portd_a[pixel_step2];
+	y |= colbyte_portd[pixel_step2];
 	PORTD = y;
 
 	if (pixel_step == 0)
@@ -144,17 +133,6 @@ ISR (TIMER1_OVF_vect)
 		{
 			row_step=0;
 			pixel_step2 = 0;
-			
-			if(buffer_ready == 1)
-			{
-				for(uint8_t j=0;j<56;j++)
-				{
-					colbyte_portb_a[j]=colbyte_portb_b[j];
-					colbyte_portd_a[j]=colbyte_portd_b[j];
-				}
-			}
-			
-			
 		}
 	}
 }
@@ -318,11 +296,11 @@ int main(void)
 						{
 							if(data > i)
 							{
-								colbyte_portb_b[pixel_x*7+i]|=(1<<(pixel_y-2));
+								colbyte_portb[pixel_x*7+i]|=(1<<(pixel_y-2));
 							}
 							else
 							{
-								colbyte_portb_b[pixel_x*7+i]&=~(1<<(pixel_y-2));
+								colbyte_portb[pixel_x*7+i]&=~(1<<(pixel_y-2));
 							}
 						}
 					}
@@ -332,11 +310,11 @@ int main(void)
 						{
 							if(data > i)
 							{
-								colbyte_portd_b[pixel_x*7+i]|=(1<<(pixel_y+6));
+								colbyte_portd[pixel_x*7+i]|=(1<<(pixel_y+6));
 							}
 							else
 							{
-								colbyte_portd_b[pixel_x*7+i]&=~(1<<(pixel_y+6));
+								colbyte_portd[pixel_x*7+i]&=~(1<<(pixel_y+6));
 							}
 						}
 					}

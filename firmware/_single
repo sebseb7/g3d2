@@ -11,6 +11,7 @@ $port->stopbits(1);
 
 
 my $g =0;
+my $j  =7;
 while(1)
 {
 #	my $return=$port->write(chr(66).chr(00).chr(00).chr(0).chr(0).chr(229));
@@ -26,10 +27,10 @@ while(1)
 #			warn $g;
 			my $c = $g;
 			$c = 15-$c if $g > 7;
-			my $return=$port->write(chr(66).chr($y).chr($x).chr(($c)));
+			my $return=$port->write(chr(66).chr($y).chr($x).chr(($j)));
 #			my $return=$port->write(chr(66).chr($y).chr($x).chr(($x*$y/8)));
 			$port->read(1);
-			usleep(10);
+			usleep(100);
 		}
 	}
 	$g++;
@@ -38,5 +39,15 @@ while(1)
     my $now = (time-$time1)/1000000;
 
 	warn 1 / (time - $time1);
+	
+	
+	if($j==0)
+	{
+		$j=7;
+	}
+	else
+	{
+		$j=0;
+	}
 }
 			close($port);
