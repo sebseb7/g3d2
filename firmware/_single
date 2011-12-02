@@ -25,7 +25,7 @@ while(1)
 #			warn $g;
 			my $c = $g;
 			$c = 15-$c if $g > 7;
-			my $return=$port->write(chr(66).chr($y).chr($x).chr(($x-1)));
+			my $return=$port->write(chr(66).chr($y).chr($x).chr((4)));
 #			my $return=$port->write(chr(66).chr($y).chr($x).chr(($x*$y/8)));
 			$port->read(1);
 			usleep(180);

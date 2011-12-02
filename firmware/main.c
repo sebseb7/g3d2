@@ -9,6 +9,24 @@
 #include "usart.h"
 
 
+
+/*
+70 40 20 8 4 2 1
+
+	new idea:
+	
+	cycle0: active all full on LEDs
+	cycle10: copy buffer
+	cycle30: activate all 6/7 leds
+	cycle40: activate all 5/7 leds
+	cycle62: activate all 4/7 leds
+	cycle66: activate all 3/7 leds
+	cycle68: activate all 2/7 leds
+	cycle69: activate all 1/7 leds
+	cycle70: all OUT
+*/
+
+
 #define DISPLAY_WIDTH 72
 #define DISPLAY_HEIGHT 32
 
@@ -126,14 +144,19 @@ void doit()
 	}
 
 
-	ROW0_OFF;
+	PORTC = 0x3f;
+	PORTD |= (1<<2)|(1<<3);
+	
+	//which is short for: 
+	
+/*	ROW0_OFF;
 	ROW1_OFF;
 	ROW2_OFF;
 	ROW3_OFF;
 	ROW4_OFF;
 	ROW5_OFF;
 	ROW6_OFF;
-	ROW7_OFF;
+	ROW7_OFF;*/
 
 	active_col++;
 	
@@ -155,24 +178,29 @@ void doit()
 			COL2_ON;
 		break;
 		case 3:
-			COL2_OFF;
-			COL3_ON;
+			//COL2_OFF;
+			//COL3_ON;
+			PORTB = PORTB << 1;
 		break;
 		case 4:
-			COL3_OFF;
-			COL4_ON;
+//			COL3_OFF;
+//			COL4_ON;
+			PORTB = PORTB << 1;
 		break;
 		case 5:
-			COL4_OFF;
-			COL5_ON;
+//			COL4_OFF;
+//			COL5_ON;
+			PORTB = PORTB << 1;
 		break;
 		case 6:
-			COL5_OFF;
-			COL6_ON;
+//			COL5_OFF;
+//			COL6_ON;
+			PORTB = PORTB << 1;
 		break;
 		case 7:
-			COL6_OFF;
-			COL7_ON;
+//			COL6_OFF;
+//			COL7_ON;
+			PORTB = PORTB << 1;
 		break;
 		case 0:
 			COL7_OFF;
@@ -370,7 +398,7 @@ int main(void)
 				}
 				else if(idx == 2)
 				{
-					if((pixel_x == 0) && (pixel_y == 0))
+/*					if((pixel_x == 0) && (pixel_y == 0))
 					{
 						for(uint8_t x = 0;x<64;x++)
 						{
@@ -378,13 +406,14 @@ int main(void)
 						}
 					}
 					else
-					{
-						pixel_nr = pixelIsOurs(pixel_x,pixel_y);
+					{*/
+/*						pixel_nr = pixelIsOurs(pixel_x,pixel_y);
 						if(pixel_nr)
 						{
 							leds_buf[pixel_nr-1] = colors[data];
-						}
-					}
+						}*/
+						leds_buf[(pixel_y-1)*8+(pixel_x-1)] = colors[data];
+//					}
 				}
 				idx++;
 				
