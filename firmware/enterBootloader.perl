@@ -19,7 +19,7 @@ $port->parity("none");
 $port->stopbits(1);
 
 #my $return=$port->write(chr(102).esc(chr(35+42))."\n");
-my $return=$port->write(chr(102).esc(chr(1))."\n");
+my $return=$port->write(chr(102).esc(chr($ARGV[0]))."\n");
 warn $port->read(1);
 
 sub esc($)

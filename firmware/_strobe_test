@@ -29,14 +29,14 @@ while(1)
 	$port->write(chr(35));
 	for(0..72)
 	{
-		$port->write(esc(chr(0) x 32));
+		$port->write(esc(chr(15) x 32));
 	}
 	usleep(6000);
 
 	$port->write(chr(35));
 	for(0..72)
 	{
-		$port->write(esc(chr(15) x 32));
+		$port->write(esc(chr(16) x 32));
 	}
 	usleep(6000);
 

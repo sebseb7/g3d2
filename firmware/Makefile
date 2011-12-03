@@ -12,6 +12,8 @@ F_CPU = 20000000
 #F_CPU = 20000000
 QUARZ = 20MHZ
 
+ADDR=0
+
 #ext
 FUSE_SETTINGS =-U lfuse:w:0xd6:m -U hfuse:w:0xdf:m
 #int
@@ -289,7 +291,8 @@ flash: $(TARGET).hex
 	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH)
 	
 
-uflash: $(TARGET).hex
+uflash: clean  $(TARGET).hex
+	./enterBootloader.perl $(ADDR)
 	$(AVRDUDE) $(AVRDUDE_UFLAGS) $(AVRDUDE_WRITE_FLASH)
 	
 eeprom: $(TARGET).eep
@@ -303,7 +306,7 @@ reset:
 
 
 # Create final output files (.hex, .eep) from ELF output file.
-%.hex: %.elf
+%.hex: %.elf 
 	@echo
 	@echo $(MSG_FLASH) $@
 	$(OBJCOPY) -O $(FORMAT) -R .eeprom $< $@

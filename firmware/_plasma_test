@@ -25,7 +25,7 @@ my $z = 0;
 
 while(1)
 {
-	$z+=0.010;
+	$z+=0.004;
 	$port->write(chr(35));
 	my $time1 = time;
  
@@ -58,7 +58,7 @@ while(1)
 
 			$num=1 if $num==0;
 			$str.=chr($num);
-#			$str.=chr($y*2);
+#		$str.=chr(15);
 
 			if(($x == 8)and($y==2))
 			{
@@ -91,7 +91,7 @@ while(1)
 	
 	}
 
-	usleep(10000);
+	usleep(4000);
 
 	warn 1 / (time - $time1);
 }

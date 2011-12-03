@@ -26,21 +26,21 @@ typedef void (*AppPtr_t)(void) __attribute__ ((noreturn));
 
 uint8_t pixelIsOurs(uint8_t,uint8_t);
 
-uint8_t addr = 1;
+uint8_t addr = ADDR;
 
 //these variabled are used by the timer intr
 uint8_t pixel_step = 0;
 uint8_t pixel_step2 = 0;
 uint8_t row_step = 0;
 
-uint8_t steps[15] = {1,1,1,1,1,2,3,4,6,7,11,18,30,50,1};
+uint8_t steps[16] = {1,1,1,1,1,2,3,4,6,7,11,18,30,50,200,1};
 
 uint8_t rowbyte_portc[8] = {~1,~2,~4,~8,~16,~32,~0,~0};
 uint8_t rowbyte_portd[8] = {12,12,12,12,12 ,12 ,8,4};
 
 uint8_t bufferfree = 1;
 
-uint8_t colbyte_portb[120]={
+uint8_t colbyte_portb[128]={
 							0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 							0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 							0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -51,7 +51,7 @@ uint8_t colbyte_portb[120]={
 							0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 							};
 
-uint8_t colbyte_portd[120]={
+uint8_t colbyte_portd[128]={
 							0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 							0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 							0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -118,7 +118,7 @@ ISR (TIMER1_OVF_vect)
 	pixel_step++;
 	pixel_step2++;
 	
-	if(pixel_step == 15)
+	if(pixel_step == 16)
 	{
 		pixel_step = 0;
 		row_step++;
@@ -374,11 +374,11 @@ void setLedXY(uint8_t x,uint8_t y, uint8_t brightness)
 		{
 			if(brightness > i)
 			{
-				colbyte_portb[x*15+i]|=(1<<(y-2));
+				colbyte_portb[x*16+i]|=(1<<(y-2));
 			}
 			else
 			{
-				colbyte_portb[x*15+i]&=~(1<<(y-2));
+				colbyte_portb[x*16+i]&=~(1<<(y-2));
 			}
 		}
 	}
@@ -388,11 +388,11 @@ void setLedXY(uint8_t x,uint8_t y, uint8_t brightness)
 		{
 			if(brightness > i)
 			{
-				colbyte_portd[x*15+i]|=(1<<(y+6));
+				colbyte_portd[x*16+i]|=(1<<(y+6));
 			}
 			else
 			{
-				colbyte_portd[x*15+i]&=~(1<<(y+6));
+				colbyte_portd[x*16+i]&=~(1<<(y+6));
 			}
 		}
 	}
