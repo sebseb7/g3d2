@@ -13,22 +13,17 @@
 
 	todo:
 
-	- pack one line in three bytes
-	- module shift
+	- pack two pixel is one byte (on uart)
 	- addr selection (select addr with button, save to eeprom)
 
 */
 
-#define DISPLAY_WIDTH 72
-#define DISPLAY_HEIGHT 32
 
 typedef void (*AppPtr_t)(void) __attribute__ ((noreturn)); 
 
-uint8_t pixelIsOurs(uint8_t,uint8_t);
-
 uint8_t addr = ADDR;
 
-//these variabled are used by the timer intr
+//these variables are used by the timer intr
 uint8_t pixel_step = 0;
 uint8_t pixel_step2 = 0;
 uint8_t row_step = 0;
@@ -37,8 +32,6 @@ uint8_t steps[16] = {1,1,1,1,1,2,3,4,6,7,11,18,30,50,200,1};
 
 uint8_t rowbyte_portc[8] = {~1,~2,~4,~8,~16,~32,~0,~0};
 uint8_t rowbyte_portd[8] = {12,12,12,12,12 ,12 ,8,4};
-
-uint8_t bufferfree = 1;
 
 uint8_t colbyte_portb[128]={
 							0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -61,30 +54,6 @@ uint8_t colbyte_portd[128]={
 							0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 							0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 							};
-
-/*uint8_t colbyte_portb1[56]={
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							};
-
-uint8_t colbyte_portd1[56]={
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,
-							};
-*/
-
 
 ISR (TIMER1_OVF_vect)
 {
@@ -126,16 +95,6 @@ ISR (TIMER1_OVF_vect)
 		{
 			row_step=0;
 			pixel_step2 = 0;
-			
-			if(bufferfree == 1)
-			{
-			
-/*				for(uint8_t i=0;i<56;i++)
-				{
-					colbyte_portd[i]=colbyte_portd1[i];
-					colbyte_portb[i]=colbyte_portb1[i];
-				}
-*/			}
 		}
 	}
 }
@@ -205,17 +164,11 @@ int main(void)
 	uint8_t x_state = 0;
 	uint8_t y_state = 0;
 	uint8_t mod_state = 0;
-//	setLedXY(1,1,1);
-
-//	setLedXY(0,0,7);
-
 
 	while(1)
 	{
 		if(USART0_Getc_nb(&data))
-//		if( UCSR0A & (1<<RXC0) )
 		{
-//			data = UDR0;
 
 
 			if(data == 0x42)
@@ -229,8 +182,6 @@ int main(void)
 			{
 				// full frame
 				state = 2;
-
-//				bufferfree = 0;
 
 				x_state = 0;
 				y_state = 0;
@@ -296,11 +247,6 @@ int main(void)
 				{
 					setLedXY(x_state,y_state,data);
 				}
-				else
-				{
-//					bufferfree = 1;
-				}
-				
 
 				y_state++;
 
@@ -320,15 +266,8 @@ int main(void)
 				if(data == 0xff)
 				{
 					// get addr
-					// display addr on LEDs
-//					SetLed(0,0,0,0);
-					for(uint8_t i = 0;i<8;i++)
-					{
-						if((addr & (1<<i))==(1<<i))
-						{
-//							SetLed(i+1,0xa0,0,0);
-						}
-					}
+					setLedAll(0);
+					setLedXY((addr/8),(addr%8),15);
 				}
 				else if(data == addr)
 				{
@@ -342,22 +281,21 @@ int main(void)
 					//disable UART for a few seconds
 			        UCSR0B &= ~(1 << RXCIE0);
 				    UCSR0B &= ~(1 << RXEN0);
-//					SetLed(0,0,0,150);
-					for(uint8_t i = 0;i < 16;i++)
+					setLedAll(10);
+					for(uint8_t x = 0;x < 8;x++)
 					{
-//						_delay_ms(0xbf);
-//						SetLed(i+1,0,150,0);
-//						writeChannels();
-//						_delay_ms(0xbf);
-//						SetLed(i+1,150,0,0);
-//						writeChannels();
+						for(uint8_t y = 0;y < 8;y++)
+						{
+							_delay_ms(0x40);
+							setLedXY(x,y,15);
+							_delay_ms(0x40);
+							setLedXY(x,y,0);
+						}
 					}
-//					_delay_ms(0xbf);
-//					SetLed(0,0,0,0);
-//					writeChannels();
+					_delay_ms(0xbf);
+					setLedAll(0);
 				    UCSR0B |= (1 << RXEN0);
 			        UCSR0B |= (1 << RXCIE0);
-					// sleep for bootloader of differend device display progress on LEDs
 				}
 				state = 0;
 			}
@@ -397,3 +335,33 @@ void setLedXY(uint8_t x,uint8_t y, uint8_t brightness)
 		}
 	}
 }
+
+void setLedAll(uint8_t brightness)
+{
+	for(uint8_t x = 0;x<8;x++)
+	{
+		for(uint8_t i = 0;i < 15;i++)
+		{
+			if(brightness > i)
+			{
+				colbyte_portb[x*16+i] = 63;
+			}
+			else
+			{
+				colbyte_portb[x*16+i] = 0;
+			}
+		}
+		for(uint8_t i = 0;i < 15;i++)
+		{
+			if(brightness > i)
+			{
+				colbyte_portd[x*16+i]=192;
+			}
+			else
+			{
+				colbyte_portd[x*16+i]=0;
+			}
+		}
+	}
+}
+
