@@ -28,7 +28,7 @@ uint8_t pixel_step = 0;
 uint8_t pixel_step2 = 0;
 uint8_t row_step = 0;
 
-uint8_t steps[16] = {1,1,1,1,1,2,3,4,6,7,11,18,30,50,200,1};
+uint8_t steps[16] = {1,1,1,1,1,2,3,4,6,7,11,18,30,50,4,1};
 
 uint8_t rowbyte_portc[8] = {~1,~2,~4,~8,~16,~32,~0,~0};
 uint8_t rowbyte_portd[8] = {12,12,12,12,12 ,12 ,8,4};

@@ -17,7 +17,7 @@ endif
 ifneq ($(findstring Darwin,$(OSTYPE)),)
 USB_DEVICE = /dev/cu.SLAB_USBtoUART
 else
-USB_DEVICE = /dev/ttyUSB1
+USB_DEVICE = /dev/ttyUSB0
 endif
 
 
@@ -69,6 +69,12 @@ clean:
 
 flash: all
 	avrdude -F -p $(MCU_AVRDUDE) -P $(USB_DEVICE) -c stk500v2    -U flash:w:$(PROJECT).hex
+
+fflash: all
+	(cd .. && make clean && make ADDR=$(ADDR) )
+	cat ../8x8.hex | grep -v :00 > ./$(PROJECT)_f.hex
+	cat $(PROJECT).hex >> $(PROJECT)_f.hex
+	avrdude -F -p $(MCU_AVRDUDE) -P $(USB_DEVICE) -c stk500v2    -U flash:w:$(PROJECT)_f.hex
 
 fuse:
 	avrdude -F -p $(MCU_AVRDUDE) -P $(USB_DEVICE) -c stk500v2    $(FUSE_SETTINGS)
