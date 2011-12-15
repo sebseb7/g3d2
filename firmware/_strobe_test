@@ -26,17 +26,17 @@ my $z = 0;
 while(1)
 {
 	my $time1 = time;
-foreach my $col (1,15)
+foreach my $col (0,15)
 #foreach my $col (0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1)
 {
 #	for(0..10)
 	{
-	$port->write(chr(35));
+	$port->write(chr(103));
 	for(0..17)
 	{
-		$port->write(esc(chr($col) x 64));
-		$port->write(esc(chr($col) x 64));
-		usleep(2300);
+		$port->write(chr($col) x 64);
+		$port->write(chr($col) x 64);
+		usleep(1500);
 	}
 #	$port->write(chr(0));
 #	usleep(7000);
@@ -49,15 +49,4 @@ foreach my $col (1,15)
 
 $port->close();
 
-sub esc($)
-{
-    my $data = shift;
-    
-	$data =~ s/e/\x65\x3/go;
-	$data =~ s/\x23/\x65\x1/go;
-	$data =~ s/B/\x65\x2/go;
-	$data =~ s/f/\x65\x4/go;
-                    
-	return $data;
-}
                         

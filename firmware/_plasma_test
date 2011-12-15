@@ -18,10 +18,14 @@ if($hostname eq 'lennyvm')
 my $port = Device::SerialPort->new($port);
 $port->databits(8);
 $port->baudrate(500000);
+#$port->baudrate(1152000);
+#$port->baudrate(1152000);
+$port->handshake("xoff");
 $port->parity("none");
 $port->stopbits(1);
  
 my $z = 0;
+my $z1 = 0;
 
 my @pixbuf;
 foreach my $i (0..2303)
@@ -34,8 +38,9 @@ foreach my $i (0..2303)
 
 while(1)
 {
-	$z+=0.004;
-	$port->write(chr(35));
+	$z+= ((1-sin($z1))/60);
+	$z1+=0.005;
+	$port->write(chr(103));
 	my $time1 = time;
  
 
@@ -48,38 +53,48 @@ while(1)
 	{
 		foreach my $x (0..31)
 		{
-			my $num = abs sin($x*3+4*cos($z))*40*sin($z*2);
-			$num += abs sin($y*3-3*cos($z/2))*30 + cos($y*3-sin($z*3))*25;
+			my $num = abs sin($x*3.2+3*sin($z))*40*cos($z*2.1);
+			$num += abs sin($y*3.2-2*cos($z1))*30 + cos($y*3-sin($z*3))*25;
 		
 			$num = int($num)%32;
 		
 			if($num > 15)
 			{
-				$num = 32-$num;
+				$num = 31-$num;
 			}
 
 			$num=1 if $num==0;
 
-
-			$pixbuf[($y*8+($x%8)+((($x-$x%8)/8) * 576))]=chr($num);
 			$pixel++;
+			
+			
+			warn $num if $num > 15;
+			$pixbuf[($y*8+($x%8)+((($x-$x%8)/8) * 576))]=$num;
+			
 		}
 	}
-
 
 
 	my $pixel = 0;
-	foreach my $mod (0..35)
+	foreach my $mod (1..36)
 	{
 		my $str;
-		foreach my $pix (0..63)
+		foreach my $pix (1..32)
 		{
-			$str.=$pixbuf[$pixel];
+			$str.=chr($pixbuf[$pixel]+$pixbuf[$pixel]*16);
+			$pixel++;
 			$pixel++;
 		}
 		$port->write(esc($str));
-		usleep(900);
+
+#		$port->lookclear;#		(my $done, undef) = $port->write_done(0);
+#		warn $done;
+#		(my $done, undef) = $port->write_done(0);
+#		warn $done;
 	}
+
+	usleep(14000);
+#	$port->write_drain;
 
 		
 
@@ -89,15 +104,18 @@ while(1)
 
 $port->close();
 
+
+
 sub esc($)
 {
     my $data = shift;
     
-	$data =~ s/e/\x65\x3/go;
-	$data =~ s/\x23/\x65\x1/go;
-	$data =~ s/B/\x65\x2/go;
-	$data =~ s/f/\x65\x4/go;
-                    
+    
+	$data =~ s/\x68/\x65\x2/go;
+	$data =~ s/\x67/\x65\x1/go;
+	$data =~ s/\x65/\x65\x3/go;
+	$data =~ s/\x66/\x65\x4/go;
+                                                            
 	return $data;
 }
-                        
+

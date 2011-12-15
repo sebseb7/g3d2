@@ -57,7 +57,7 @@ uint8_t colbyte_portd[128]={
 							};
 
 
-uint8_t frame_buffer[64];
+uint8_t frame_buffer[32];
 
 
 ISR (TIMER1_OVF_vect)
@@ -159,16 +159,16 @@ int main(void)
 	USART0_Init();
 
 	
-    uint8_t pixel_mod = 0;
-    uint8_t pixel_x = 0;
-    uint8_t pixel_y = 0;
 
 	uint8_t data = 0;  
 	uint8_t state = 0;
 	uint8_t escape = 0;
+
 	uint8_t idx = 0;
-	uint8_t x_state = 0;
-	uint8_t y_state = 0;
+    uint8_t pixel_mod = 0;
+    uint8_t pixel_x = 0;
+    uint8_t pixel_y = 0;
+
 	uint8_t pixel_state = 0;
 	uint8_t mod_state = 0;
 
@@ -187,55 +187,46 @@ int main(void)
 		if(USART0_Getc_nb(&data))
 		{
 
-
-			if(data == 0x42)
+			switch(data)
 			{
-				// single pixel
-				state = 1;
-				idx = 0;
-				continue;
-			}
-			else if(data == 0x23)
-			{
-				// full frame
-				state = 2;
-
-				x_state = 0;
-				y_state = 0;
-				mod_state = 0;
-				pixel_state = 0;
-				continue;
-			}
-			else if(data == 0x65)
-			{
-				escape = 1;
-				continue;
-			}
-			else if(data == 0x66)
-			{
-				// bootloader
-				state = 3;
-				continue;
+				case 0x68:
+					// single pixel
+					state = 1;
+					idx = 0;
+					continue;
+				case 0x67:
+					// full frame
+					state = 2;
+	
+					mod_state = 0;
+					pixel_state = 0;
+					continue;
+				case  0x65:
+					escape = 1;
+					continue;
+				case 0x66:
+					state = 3;
+					continue;
 			}
 			
 			if(escape == 1)
 			{
 				escape = 0;
-				if(data == 0x01)
+				
+				switch(data)
 				{
-					data = 0x23;
-				}
-				else if(data == 0x02)
-				{
-					data = 0x42;
-				}
-				else if(data == 0x03)
-				{
-					data = 0x65;
-				}
-				else if(data == 0x04)
-				{
-					data = 0x66;
+					case 0x01:
+						data = 0x67;
+						break;
+					case 0x02:
+						data = 0x68;
+						break;
+					case 0x03:
+						data = 0x65;
+						break;
+					case 0x04:
+						data = 0x66;
+						break;
 				}
 			}
 			
@@ -243,24 +234,22 @@ int main(void)
 			if(state == 1)
 			{
 				// wait for our pixel
-				if(idx == 0)
+				switch(idx)
 				{
-					pixel_mod = data;
-				}
-				else if(idx == 1)
-				{
-					pixel_x = data;
-				}
-				else if(idx == 2)
-				{
-					pixel_y = data;
-				}
-				else if(idx == 3)
-				{
-					if(pixel_mod == addr2)
-					{
-						setLedXY(7-pixel_x,pixel_y,data);
-					}
+					case 0:
+						pixel_mod = data;
+						break;
+					case 1:
+						pixel_x = data;
+						break;
+					case 2:
+						pixel_y = data;
+						break;
+					case 3:
+						if(pixel_mod == addr2)
+						{
+							setLedXY(7-pixel_x,pixel_y,data);
+						}
 				}
 				idx++;
 				
@@ -268,27 +257,14 @@ int main(void)
 			else if(state == 2)
 			{
 
-//				if(mod_state == 35)
 				if(mod_state == addr2)
 				{
 					frame_buffer[pixel_state] = data;
-//					setLedXY(7-x_state,y_state,data);
 				}
 
-//				y_state++;
 				pixel_state++;
 
-/*				if(y_state == 8)
-				{
-					y_state=0;
-					x_state++;
-					if(x_state == 8)
-					{
-						x_state=0;
-						mod_state++;
-					}
-				}
-*/				if(pixel_state == 64)
+				if(pixel_state == 32)
 				{
 					pixel_state = 0;
 					mod_state++;
@@ -298,19 +274,24 @@ int main(void)
 					uint8_t ps2 =0;
 					for(uint8_t x = 0;x<8;x++)
 					{
-						for(uint8_t y = 0;y<8;y++)
+						for(uint8_t y = 0;y<4;y++)
 						{
-							setLedXY(7-x,y,frame_buffer[ps2]);
+							setLedXY(7-x,y*2,(frame_buffer[ps2] & 0x0f));
+							setLedXY(7-x,y*2+1, ( (frame_buffer[ps2]&0xf0) >> 4 ) );
 							ps2++;
-//							pixel_state++;
+
 						}
 					}
-
 				}
 			}
 			else if(state == 3)
 			{
-				if(data == 0xff)
+				if(data == 0xfd)
+				{
+                    UBRR0L = 0;
+                    UCSR0A &= ~(1 << U2X0);
+				}
+				else if(data == 0xff)
 				{
 					// get addr
 					setLedAll(0);
@@ -347,6 +328,9 @@ int main(void)
 					//disable UART for a few seconds
 			        UCSR0B &= ~(1 << RXCIE0);
 				    UCSR0B &= ~(1 << RXEN0);
+#ifdef ADDR_100			        
+		            UCSR0B &= ~(1 << TXEN0);
+#endif		            
 					setLedAll(10);
 					for(uint8_t x = 0;x < 8;x++)
 					{
@@ -362,6 +346,9 @@ int main(void)
 					setLedAll(0);
 				    UCSR0B |= (1 << RXEN0);
 			        UCSR0B |= (1 << RXCIE0);
+#ifdef ADDR_100			        
+		            UCSR0B |= (1 << TXEN0);
+#endif		            
 				}
 				state = 0;
 			}
