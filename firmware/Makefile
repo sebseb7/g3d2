@@ -88,6 +88,7 @@ CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
 CFLAGS += -std=gnu99
 
 CFLAGS += -DADDR=$(ADDR)
+CFLAGS += -DADDR_$(ADDR)=1
 CFLAGS += -DF_CPU=$(F_CPU)
 CFLAGS += -DQUARZ=$(QUARZ)
 CFLAGS += -DADDR=$(ADDR)
@@ -292,7 +293,7 @@ flash: $(TARGET).hex
 	
 
 uflash: clean  $(TARGET).hex
-#	./enterBootloader.perl $(ADDR)
+	./enterBootloader.perl $(ADDR)
 	$(AVRDUDE) $(AVRDUDE_UFLAGS) $(AVRDUDE_WRITE_FLASH)
 	
 eeprom: $(TARGET).eep

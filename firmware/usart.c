@@ -3,6 +3,7 @@
 
 #include "main.h"
 #include "usart.h"
+#include "pins.h"
 
 #define UART_RXBUFSIZE 250
 
@@ -26,7 +27,23 @@ ISR (USART_RX_vect)
         ++rxhead0;
         if (rxhead0 == (rxbuf0 + UART_RXBUFSIZE)) rxhead0 = rxbuf0;
     }
-	UCSR0B |= (1 << RXCIE0);
+/*	if(diff > 50)
+	{
+		ROW7_ON;
+	}
+	else
+	{
+		ROW7_OFF;
+	}
+	if(diff > 25)
+	{
+		ROW6_ON;
+	}
+	else
+	{
+		ROW6_OFF;
+	}
+*/	UCSR0B |= (1 << RXCIE0);
 }
 
 

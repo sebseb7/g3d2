@@ -23,6 +23,15 @@ $port->stopbits(1);
  
 my $z = 0;
 
+my @pixbuf;
+foreach my $i (0..2303)
+{
+    $pixbuf[$i]=chr(0);
+}
+
+#    $pixbuf[632]=chr(15);
+
+
 while(1)
 {
 	$z+=0.004;
@@ -32,22 +41,15 @@ while(1)
 
 	my $pixel = 0;
 	my $mod = 0;
-	while(1)
+
+
+	
+	foreach my $y (0..71)
 	{
-
-		my $str;
-		foreach my $i (0..7)
+		foreach my $x (0..31)
 		{
-			
-			my $x = ($pixel % 8)+(($mod%9)*8);
-#			warn $x;
-
-			my $y= ($pixel-($pixel%8))/8;
-#warn $pixel.':'.$x.':'.$y.':'.$mod;
-#sleep(0.3);
 			my $num = abs sin($x*3+4*cos($z))*40*sin($z*2);
 			$num += abs sin($y*3-3*cos($z/2))*30 + cos($y*3-sin($z*3))*25;
-#			$num += sin($z);	
 		
 			$num = int($num)%32;
 		
@@ -57,41 +59,30 @@ while(1)
 			}
 
 			$num=1 if $num==0;
-			$str.=chr($num);
-#		$str.=chr(15);
 
-			if(($x == 8)and($y==2))
-			{
-		#		$str.=chr(15);
-		#		die;
-				
-			}
-			elsif(($x == 0)and($y==0))
-			{
-		#		$str.=chr(15);
-			}
-			else
-			{
-		#		$str.=chr(0);
-			}
+
+			$pixbuf[($y*8+($x%8)+((($x-$x%8)/8) * 576))]=chr($num);
+			$pixel++;
+		}
+	}
+
+
+
+	my $pixel = 0;
+	foreach my $mod (0..35)
+	{
+		my $str;
+		foreach my $pix (0..63)
+		{
+			$str.=$pixbuf[$pixel];
 			$pixel++;
 		}
 		$port->write(esc($str));
-		
-		if($pixel == 64)
-		{
-			$mod++;
-			$pixel=0;
-			if($mod == 32)
-			{
-				last;
-			}
-		}
-		
-	
+		usleep(900);
 	}
 
-	usleep(14000);
+		
+
 
 	warn 1 / (time - $time1);
 }

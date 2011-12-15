@@ -26,21 +26,25 @@ my $z = 0;
 while(1)
 {
 	my $time1 = time;
-	$port->write(chr(35));
-	for(0..72)
+foreach my $col (1,15)
+#foreach my $col (0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1)
+{
+#	for(0..10)
 	{
-		$port->write(esc(chr(0) x 32));
-	}
-	usleep(16000);
-
 	$port->write(chr(35));
-	for(0..72)
+	for(0..17)
 	{
-		$port->write(esc(chr(13) x 32));
+		$port->write(esc(chr($col) x 64));
+		$port->write(esc(chr($col) x 64));
+		usleep(2300);
 	}
-	usleep(16000);
+#	$port->write(chr(0));
+#	usleep(7000);
+	}
 
-	warn (1 / (time - $time1))*2;
+
+}
+	warn (1 / (time - $time1)*2);
 }
 
 $port->close();

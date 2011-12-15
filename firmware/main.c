@@ -7,6 +7,7 @@
 #include "main.h"
 #include "pins.h"
 #include "usart.h"
+#include "addrfont.h"
 
 
 /* 
@@ -54,6 +55,10 @@ uint8_t colbyte_portd[128]={
 							0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 							0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 							};
+
+
+uint8_t frame_buffer[64];
+
 
 ISR (TIMER1_OVF_vect)
 {
@@ -154,6 +159,7 @@ int main(void)
 	USART0_Init();
 
 	
+    uint8_t pixel_mod = 0;
     uint8_t pixel_x = 0;
     uint8_t pixel_y = 0;
 
@@ -163,7 +169,18 @@ int main(void)
 	uint8_t idx = 0;
 	uint8_t x_state = 0;
 	uint8_t y_state = 0;
+	uint8_t pixel_state = 0;
 	uint8_t mod_state = 0;
+
+	uint8_t addr2 = addr;
+	if(addr2 > 99)
+	{
+		addr2 = addr - 100;
+/*		if(addr2 == 29)
+		{
+			addr2 = 35;
+		}
+*/	}
 
 	while(1)
 	{
@@ -186,6 +203,7 @@ int main(void)
 				x_state = 0;
 				y_state = 0;
 				mod_state = 0;
+				pixel_state = 0;
 				continue;
 			}
 			else if(data == 0x65)
@@ -227,15 +245,22 @@ int main(void)
 				// wait for our pixel
 				if(idx == 0)
 				{
-					pixel_x = data;
+					pixel_mod = data;
 				}
 				else if(idx == 1)
 				{
-					pixel_y = data;
+					pixel_x = data;
 				}
 				else if(idx == 2)
 				{
-					setLedXY(pixel_x,pixel_y,data);
+					pixel_y = data;
+				}
+				else if(idx == 3)
+				{
+					if(pixel_mod == addr2)
+					{
+						setLedXY(7-pixel_x,pixel_y,data);
+					}
 				}
 				idx++;
 				
@@ -243,14 +268,17 @@ int main(void)
 			else if(state == 2)
 			{
 
-				if(mod_state == addr)
+//				if(mod_state == 35)
+				if(mod_state == addr2)
 				{
-					setLedXY(x_state,y_state,data);
+					frame_buffer[pixel_state] = data;
+//					setLedXY(7-x_state,y_state,data);
 				}
 
-				y_state++;
+//				y_state++;
+				pixel_state++;
 
-				if(y_state == 8)
+/*				if(y_state == 8)
 				{
 					y_state=0;
 					x_state++;
@@ -260,6 +288,25 @@ int main(void)
 						mod_state++;
 					}
 				}
+*/				if(pixel_state == 64)
+				{
+					pixel_state = 0;
+					mod_state++;
+				}
+				if((mod_state == 36)&&(pixel_state==0))
+				{
+					uint8_t ps2 =0;
+					for(uint8_t x = 0;x<8;x++)
+					{
+						for(uint8_t y = 0;y<8;y++)
+						{
+							setLedXY(7-x,y,frame_buffer[ps2]);
+							ps2++;
+//							pixel_state++;
+						}
+					}
+
+				}
 			}
 			else if(state == 3)
 			{
@@ -267,7 +314,26 @@ int main(void)
 				{
 					// get addr
 					setLedAll(0);
-					setLedXY((addr/8),(addr%8),15);
+					setLedXY((addr2/8),(addr2%8),15);
+				}
+				else if(data == 0xfe)
+				{
+					// get addr
+					setLedAll(0);
+					for(uint8_t i = 0;i<5;i++)
+					{
+						for(uint8_t c=0;c<7;c++)
+						{
+							if((addrfont[i] & (1<<c))==(1<<c))
+							{
+								setLedXY(i,c,15);
+							}
+							else
+							{
+								setLedXY(i,c,0);
+							}
+						}
+					}
 				}
 				else if(data == addr)
 				{
@@ -286,13 +352,13 @@ int main(void)
 					{
 						for(uint8_t y = 0;y < 8;y++)
 						{
-							_delay_ms(0x40);
+							_delay_ms(0x19);
 							setLedXY(x,y,15);
-							_delay_ms(0x40);
+							_delay_ms(0x19);
 							setLedXY(x,y,0);
 						}
 					}
-					_delay_ms(0xbf);
+					_delay_ms(0x15);
 					setLedAll(0);
 				    UCSR0B |= (1 << RXEN0);
 			        UCSR0B |= (1 << RXCIE0);
