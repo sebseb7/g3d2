@@ -20,7 +20,7 @@ print outfile "#ifdef ADDR_0\n";
 print_char(0);
 
 
-foreach my $char (0,1,2,9,10,11,18,19,20,27,28,29)
+foreach my $char (0..35)
 {
 	print outfile "#elif ADDR_".($char+100)."\n";
 	print_char($char);
