@@ -187,10 +187,6 @@ int main(void)
 
 	display_addr();
 	
-	_delay_ms(500);
-
-	setLedAll(0);
-
 	USART0_Init();
 
 	
