@@ -63,6 +63,41 @@ int main(int argc,char** argv)
 				pixel(x,y,0);
 			}
 		}
+
+		for(int x = 0; x < 72;x++)
+		{
+	    	for(int y = 0 ; y < 32; y++)
+			{
+				pixel(x,y,5);
+				usleep(8000);
+			}
+		}
+
+	    for(int y = 0 ; y < 32; y++)
+		{
+			for(int x = 0; x < 72;x++)
+			{
+				pixel(x,y,0);
+				usleep(8000);
+			}
+		}
+
+	    for(int y = 0 ; y < 32; y++)
+		{
+			for(int x = 0; x < 72;x++)
+			{
+				pixel(x,y,5);
+				usleep(8000);
+			}
+		}
+		for(int x = 0; x < 72;x++)
+		{
+	    	for(int y = 0 ; y < 32; y++)
+			{
+				pixel(x,y,0);
+				usleep(8000);
+			}
+		}
 	}
 
                                                             

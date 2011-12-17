@@ -84,7 +84,6 @@ while(1)
 			$pixel++;
 		}
 		$port->write(esc($str));
-
 	}
 
 	usleep(14000);
