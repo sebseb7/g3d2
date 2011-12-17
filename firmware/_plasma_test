@@ -30,10 +30,9 @@ my $z1 = 0;
 my @pixbuf;
 foreach my $i (0..2303)
 {
-    $pixbuf[$i]=chr(0);
+    $pixbuf[$i]=0;
 }
 
-#    $pixbuf[632]=chr(15);
 
 
 while(1)
@@ -79,7 +78,7 @@ while(1)
 		my $str;
 		foreach my $pix (1..32)
 		{
-			$str.=chr($pixbuf[$pixel]+$pixbuf[$pixel]*16);
+			$str.=chr($pixbuf[$pixel]+$pixbuf[$pixel+1]*16);
 			$pixel++;
 			$pixel++;
 		}
