@@ -1,0 +1,56 @@
+#!/usr/bin/perl
+
+use Device::SerialPort;
+use Time::HiRes qw(usleep time);
+
+my $port = Device::SerialPort->new("/dev/ttyUSB0");
+$port->databits(8);
+$port->baudrate(500000);
+$port->parity("none");
+$port->stopbits(1);
+
+
+my @steps  = (3,4,5,6,7,8,9,10,11,12,13,14,15,14,13,12,11,10,9,8,7,6,5,4);
+
+while(1)
+{
+	my $time1 = time;
+	foreach my $col (@steps)
+	{
+		foreach my $y (0..31)
+		{
+			foreach my $x (0..71)
+			{
+		
+				my $x2 = $x % 8;
+				my $y2 = $y % 8;
+				my $mod = ($x-$x2)/8  + (($y-$y2)/8*9);
+
+				my $return=$port->write(chr(104).esc(chr($mod).chr($x2).chr($y2).chr($col)));
+				usleep(30);
+			}
+			
+#			usleep(15800);
+		}
+	}
+    warn 1 / (time - $time1) * scalar(@steps) * 32 * 72;
+    
+}
+
+$port->read(1);
+$port->close();
+
+
+sub esc($)
+{
+    my $data = shift;
+    
+    
+    $data =~ s/\x65/\x65\x3/go;
+	$data =~ s/\x67/\x65\x1/go;
+	$data =~ s/\x68/\x65\x2/go;
+	$data =~ s/\x66/\x65\x4/go;
+                                                            
+	return $data;
+}
+
