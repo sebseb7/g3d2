@@ -3,5 +3,6 @@
 
 void setLedXY(uint8_t,uint8_t,uint8_t); // x , y , brightness
 void setLedAll(uint8_t); // brightness
+void display_addr(void);
 
 #endif

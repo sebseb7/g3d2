@@ -155,6 +155,39 @@ int main(void)
 	
 	sei();
 
+	uint8_t addr2 = addr;
+	if(addr2 > 99)
+	{
+		addr2 = addr - 100;
+/*		if(addr2 == 29)
+		{
+			addr2 = 35;
+		}
+*/	}
+
+	setLedAll(0);
+
+	for(uint8_t i = 0;i<36;i++)
+	{
+		if(i == addr2)
+		{
+			setLedAll(10);
+			_delay_ms(60);
+		}
+		else
+		{
+			setLedAll(4);
+			_delay_ms(60);
+		}
+	}
+
+
+
+	display_addr();
+	
+	_delay_ms(500);
+
+	setLedAll(0);
 
 	USART0_Init();
 
@@ -172,15 +205,6 @@ int main(void)
 	uint8_t pixel_state = 0;
 	uint8_t mod_state = 0;
 
-	uint8_t addr2 = addr;
-	if(addr2 > 99)
-	{
-		addr2 = addr - 100;
-/*		if(addr2 == 29)
-		{
-			addr2 = 35;
-		}
-*/	}
 
 	while(1)
 	{
@@ -300,21 +324,9 @@ int main(void)
 				else if(data == 0xfe)
 				{
 					// get addr
-					setLedAll(0);
-					for(uint8_t i = 0;i<5;i++)
-					{
-						for(uint8_t c=0;c<7;c++)
-						{
-							if((addrfont[i] & (1<<c))==(1<<c))
-							{
-								setLedXY(i,c,15);
-							}
-							else
-							{
-								setLedXY(i,c,0);
-							}
-						}
-					}
+					
+					display_addr();
+					
 				}
 				else if(data == addr)
 				{
@@ -418,3 +430,21 @@ void setLedAll(uint8_t brightness)
 	}
 }
 
+void display_addr(void)
+{
+	setLedAll(0);
+	for(uint8_t i = 0;i<5;i++)
+	{
+		for(uint8_t c=0;c<7;c++)
+		{
+			if((addrfont[i] & (1<<c))==(1<<c))
+			{
+				setLedXY(c,7-i,15);
+			}
+			else
+			{
+				setLedXY(c,7-i,0);
+			}
+		}
+	}
+}
