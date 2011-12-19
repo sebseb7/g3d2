@@ -104,6 +104,7 @@ ISR (TIMER1_OVF_vect)
 	}
 }
 
+uint8_t addr2 = 0;
 
 int main(void)
 {
@@ -154,8 +155,9 @@ int main(void)
 	DDRD |= (1<<PORTD5);
 	
 	sei();
+	
+	addr2 = addr;
 
-	uint8_t addr2 = addr;
 	if(addr2 > 99)
 	{
 		addr2 = addr - 100;
@@ -429,18 +431,27 @@ void setLedAll(uint8_t brightness)
 
 void display_addr(void)
 {
-	setLedAll(0);
+//	setLedAll(0);
+	setLedAll(6);
+
 	for(uint8_t i = 0;i<5;i++)
 	{
 		for(uint8_t c=0;c<7;c++)
 		{
 			if((addrfont[i] & (1<<c))==(1<<c))
 			{
-				setLedXY(c,7-i,15);
+				if((addr2 % 2) == 1)
+				{
+					setLedXY(c,7-i,15);
+				}
+				else
+				{
+					setLedXY(c,7-i,0);
+				}
 			}
 			else
 			{
-				setLedXY(c,7-i,0);
+				setLedXY(c,7-i,6);
 			}
 		}
 	}
