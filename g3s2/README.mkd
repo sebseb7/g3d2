@@ -9,3 +9,8 @@ for example you can connect an LPC board running tetrisVI (wich usually displays
 So you test your LPC Code without having a g3d2 acound.
 
 PS: only tested under MAC OSX (designed to work on Linux too)
+
+
+this is what is looks like:
+
+![g3s2](/sebseb7/g3d2/raw/master/g3s2/tetris.png)
