@@ -7,8 +7,8 @@ groesser gruener grafik SDL simulator
 
 using this software and a FTDI (or other serial Port) you can use a PC to simulate the g3d2.
 
-for example you can connect an LPC board running tetrisVI (witch usually displays it's content directly on the the g3d2)
-and use the g3s2 as the display hardware. So you test your LPC Code without having a g3d2 acound.
+For example: You can connect an LPC1768 board running tetrisVI (witch usually displays it's content directly on the the g3d2)
+via UART to the g3s2-PC and use the g3s2 as the display hardware. So you can test your LPC1768 Code without having a real g3d2 acound.
 
 The g3s2 provides the same serial protocol as the real g3d2.
 
