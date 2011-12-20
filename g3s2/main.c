@@ -119,6 +119,8 @@ int main(int argc,char** argv)
 			SDL_Flip(screen);
 		}
 		
+		SDL_Delay(10);
+		
 	}
 
 
@@ -145,7 +147,10 @@ static int usbThread(void *nothing)
         tio.c_cc[VTIME]=5;
  
 #if defined(MAC_OS_X_VERSION_10_4) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4)
-        tty_fd=open("/dev/cu.usbserial-A600dJ57", O_RDWR | O_NONBLOCK);      
+        if ( (tty_fd=open("/dev/cu.usbserial-A100DEF4", O_RDWR )) == -1)
+        {
+			printf( "Error %d opening device)\n", errno );
+        }
 		speed_t speed = 500000;
 		if ( ioctl( tty_fd,	 IOSSIOSPEED, &speed ) == -1 )
 		{
@@ -175,7 +180,6 @@ static int usbThread(void *nothing)
 	
 	
 	int rerender = 0;
-	int rerender_a = 0;
 
   	SDL_Event ev;
   
@@ -187,7 +191,7 @@ static int usbThread(void *nothing)
 	while(1)
 	{
 	
-       	while(read(tty_fd,&c,1)>0)
+       	if(read(tty_fd,&c,1)>0)
        	{
 			switch(c)
 			{
@@ -272,8 +276,6 @@ static int usbThread(void *nothing)
 				int y1 = pixel_y_state+((mod_state - (mod_state%9))/9*8);
 				int x1 = pixel_x_state+((mod_state%9)*8);
 
-			//	printf("%i:%i %i    %i:%i   %i\n",pixel_y_state,pixel_x_state,mod_state,y1,x1,c);
-
 				SDL_mutexP(displayLock);
 				display[y1][x1] = (c & 0x0f);
 				display[y1+1][x1] = ((c & 0xf0)>>4);
@@ -300,15 +302,9 @@ static int usbThread(void *nothing)
 
        	if(rerender==1)
        	{
-       		int val = 0;
-   	
+			rerender=0;
 			SDL_mutexP(eventLock);
-			val = SDL_PushEvent(&ev);
-			if(val != -1)
-			{
-//				rerender=0;
-			}
-				rerender=0;
+			SDL_PushEvent(&ev);
 			SDL_mutexV(eventLock);
   	
 	    }
