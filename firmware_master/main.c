@@ -10,6 +10,7 @@
 
 volatile uint32_t timeout_ms = 0;
 volatile uint32_t timeout_delay_ms = 0;
+static int button_state[8];
 
 void SysTick_Handler(void) 
 {
@@ -17,7 +18,7 @@ void SysTick_Handler(void)
 	if(timeout_delay_ms > 0) timeout_delay_ms--;
 }
 
-char buffer[72][32];
+char buffer[DISPLAY_WIDTH][DISPLAY_HEIGHT];
 
 
 void delay_ms(uint32_t delay_period_ms)
@@ -43,9 +44,9 @@ int main(void)
 	// sets SystemCoreClock to 44583722, but why ? 
 	SystemCoreClockUpdate();
 
-	for(int y = 0 ; y < 32; y++)
+	for(int y = 0 ; y < DISPLAY_HEIGHT; y++)
 	{	
-		for(int x = 0; x < 72;x++)
+		for(int x = 0; x < DISPLAY_WIDTH;x++)
 		{
 			buffer[x][y]=10;
 			pixel(x,y,0);
@@ -53,76 +54,46 @@ int main(void)
 	}
 
 
-	pixel(1,1,10);
-
 	tetris_load();
-
-	pixel(0,0,10);
 
 	while(1)
 	{
-//		pixel(0,0,10);
+		if((LPC_GPIO0->FIOPIN & (1<<10)) == (1<<10))
+		{
+			button_state[BUTTON_RIGHT] = 0;
+		}
+		else
+		{
+			button_state[BUTTON_RIGHT] = 1;
+		}
+		if((LPC_GPIO0->FIOPIN & (1<<11)) == (1<<11))
+		{
+			button_state[BUTTON_LEFT] = 0;
+		}
+		else
+		{
+			button_state[BUTTON_LEFT] = 1;
+		}
+
+		if((LPC_GPIO2->FIOPIN & (1<<10)) == (1<<10))
+		{
+			button_state[BUTTON_DOWN] = 0;
+		}
+		else
+		{
+			button_state[BUTTON_DOWN] = 1;
+		}
+
+
 		tetris_update();	
 		delay_ms(20);
 	}
 
-	for(int y = 0 ; y < 32; y++)
-	{	
-		for(int x = 0; x < 72;x++)
-		{
-			UART0_Sendchar(104);
-			
-			int x2 = x % 8;
-			int y2 = y % 8;
-			int mod = (x-x2)/8 + ((y-y2)/8*9);
-			
-			UART0_Sendchar(mod);
-			UART0_Sendchar(x2);
-			UART0_Sendchar(y2);
-			UART0_Sendchar(15);
-
-			delay_ms(100);
-		}
-	}
-
-
-
-
-	while(1)
-	{
-		LPC_GPIO0->FIOPIN |= (1<<19);
-		delay_ms(100);
-		LPC_GPIO0->FIOPIN &= ~(1<<19);
-		delay_ms(100);
-
-		char buf[1000];
-
-		sprintf(buf,"System Core Clock is set to: %i \n",(int)SystemCoreClock);
-		UART0_PrintString(buf);
-		sprintf(buf,"timeout is at: %u \n",(unsigned int)timeout_ms);
-		UART0_PrintString(buf);
-
-		
-		if((LPC_GPIO0->FIOPIN & (1<<10)) == (1<<10))
-		{
-			LPC_GPIO0->FIOPIN |= (1<<20);
-			UART0_PrintString("test1");
-		}
-		else
-		{
-			LPC_GPIO0->FIOPIN &= ~(1<<20);
-			UART0_PrintString("test2");
-			timeout_ms = 10000;
-		}
-	}
 }
 
 int button_down(unsigned int button) {
-
-	return 0;
+	return button_state[button]-->0;
 }
-
-
 
 void pixel(int x, int y, unsigned char color) 
 {
@@ -134,20 +105,19 @@ void pixel(int x, int y, unsigned char color)
 	
 	buffer[x][y] = color;
 	
-		
-		
-			y = 31-y;
+	y = 31-y;
 
-			UART0_Sendchar(104);
+	UART0_Sendchar(104);
 			
-			int x2 = x % 8;
-			int y2 = y % 8;
-			int mod = (x-x2)/8 + ((y-y2)/8*9);
+	int x2 = x % 8;
+	int y2 = y % 8;
+	
+	int mod = (x-x2)/8 + ((y-y2)/8*MODULES_PER_LINE);
 			
-			UART0_Sendchar(mod);
-			UART0_Sendchar(x2);
-			UART0_Sendchar(y2);
-			UART0_Sendchar(color);
+	UART0_Sendchar(mod);
+	UART0_Sendchar(x2);
+	UART0_Sendchar(y2);
+	UART0_Sendchar(color);
 
 }
         
