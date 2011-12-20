@@ -275,22 +275,11 @@ static int usbThread(void *nothing)
 			//	printf("%i:%i %i    %i:%i   %i\n",pixel_y_state,pixel_x_state,mod_state,y1,x1,c);
 
 				SDL_mutexP(displayLock);
-				if(display[y1][x1] != (c & 0x0f))
-				{
-					display[y1][x1] = (c & 0x0f);
-					rerender_a=1;
-				}
-	
-				pixel_y_state++;
-
-				if(display[y1+1][x1] != ((c & 0xf0)>>4))
-				{
-					display[y1+1][x1] = ((c & 0xf0)>>4);
-					rerender_a=1;
-				}
+				display[y1][x1] = (c & 0x0f);
+				display[y1+1][x1] = ((c & 0xf0)>>4);
        			SDL_mutexV(displayLock);
 
-				pixel_y_state++;
+				pixel_y_state+=2;
 
 				if(pixel_y_state == 8)
 				{
@@ -302,11 +291,7 @@ static int usbThread(void *nothing)
 						mod_state++;
 						if(mod_state == 36)
 						{
-							//if(rerender_a)
-							{
-								rerender_a = 0;
-								rerender = 1;
-							}
+							rerender = 1;
 						}
 					}
 				}
