@@ -23,7 +23,8 @@ OBJECTS= $(SRC:.c=.o) $(ASRC:.s=.o)
 HEADERS=$(wildcard core/*.h drivers/*.h libs/*.h *.h) pixelfonts/5x3/font.h
 
 #  Compiler Options
-GCFLAGS = -std=gnu99 -Wall -fno-common -mcpu=cortex-m3 -mthumb -O$(OPTIMIZATION) $(DEBUG)
+GCFLAGS = -std=gnu99 -Wall -fno-common -mcpu=cortex-m3 -mthumb -O$(OPTIMIZATION) $(DEBUG) 
+# -ffunction-sections -fdata-sections -fmessage-length=0   -fno-builtin
 GCFLAGS += -D__RAM_MODE__=0 
 LDFLAGS = -mcpu=cortex-m3 -mthumb -O$(OPTIMIZATION) -nostartfiles  -T$(LSCRIPT) 
 ASFLAGS = -mcpu=cortex-m3 --defsym RAM_MODE=0
