@@ -1,0 +1,324 @@
+#!/usr/bin/perl
+
+use Device::SerialPort;
+use Time::HiRes qw(usleep time);
+use strict;
+
+my $port = Device::SerialPort->new("/dev/cu.usbmodem5d11");
+$port->databits(8);
+$port->baudrate(115200);
+$port->parity("none");
+$port->stopbits(1);
+
+
+#set mac length to:   32 ? 
+$port->write(cmd(6).chr(32).cmd(0));
+
+process();
+
+#set game mac (rx mac) to 252:7:54:198:71
+$port->write(cmd(4).chr(252).chr(7).chr(54).chr(198).chr(71).cmd(0));
+process();
+
+#set channel to 83 
+$port->write(cmd(5).chr(83).cmd(0));
+process();
+
+#set tx mac to REM0T (82, 69, 77, 48, 84)
+$port->write(cmd(3).chr(82).chr(69).chr(77).chr(48).chr(84).cmd(0));
+process();
+
+
+my $count=0;
+my $lasta;
+while(1)
+{
+	if(time - $lasta  > 1)
+	{
+		$lasta = time;
+
+	warn 'announce';
+	#set channel to 81
+	$port->write(cmd(5).chr(81).cmd(0));
+	
+	
+	#anounce game
+	
+	#cmd1 == packet
+	#32 == length
+	#71 == type G (whatever that means)
+	#64 == A == Anounce
+	# 4 mal id  ( 0 ) 
+	# 4 mal ctr (++)
+	# 5 bytes game mac
+	# 1 game ch (83) 
+	# 2 gameid
+	# gameflag (immmer 0 )
+	# interval (immer 5)
+	# jitter (immer 16)
+	# gametitle (8 bytes)
+
+	#' GA\x00\x00\x00\x00\x03\x00\x00\x00\x85\xd6\xb2\x11\xebS_I\x01\x05\nTetrisVI'
+	
+	my $packet =	chr(32).
+					chr(71).
+					chr(65).
+					chr(0).chr(0).chr(0).chr(0).
+					chr($count++).chr(0).chr(0).chr(0).
+					chr(252).chr(7).chr(54).chr(198).chr(71).
+					chr(83).
+					chr(110).chr(7).
+					chr(0).
+					chr(5).
+					chr(16).
+					'TetrisVI';
+	
+	
+	
+	#$port->write($paket.crc($paket, 16).cmd(0));
+
+	my $crc = crc16($packet);	
+
+	$packet = cmd(1).$packet.chr($crc>>8).chr($crc&0xff).cmd(0);
+	
+	$port->write($packet);
+
+	#set channel to 83
+	$port->write(cmd(5).chr(83).cmd(0));
+	
+	}
+
+
+	#39630				
+	
+#	for(0..(length($packet)-1))
+#	{
+#		print substr($packet,$_,1).'  -';
+#	}
+#	print "\n";
+#	for(0..(length($packet)-1))
+#	{
+#		print ord(substr($packet,$_,1)).'-';
+#	}
+#	print "\n";
+#	for(0..(length($packet)-1))
+#	{
+#		print dec2hex(ord(substr($packet,$_,1)));
+#	}
+#	print "\n";
+					
+					
+
+#\  -1  -   -G  -A  -  -  -  -  -  -  -  -  -ü  -  -6  -Æ  -G  -S  -n  -  -  -  -  -T  -e  -t  -r  -i  -s  -V  -I  -  -
+#92 -49 -32 -71 -65 -0 -0 -0 -0 -1 -0 -0 -0 -252-7 -54 -198-71 -83 -110-7 -0 -30-16-84 -101-116-114-105-115-86 -73 - 0-
+#5c-31-20-47-41-00-00-00-00-08-00-00-00-fc-07-36-c6-47-53-6e-07-00-1e-10-54-65-74-72-69-73-56-49-
+#sending Announce packet with id=0, ctr=1, gameMac=[252, 7, 54, 189, 71], gameChannel=83, gameId=1902, gameFlags=0, gameTitle=TetrisVI
+#5c312047410000000001000000fc0736bd47536e07001e105465747269735649
+#5c312047410000000000000000fc0736bd47536e07001e105465747269735649
+#5c312047410000000001000000fc0736c647536e07001e105465747269735649
+
+
+process();
+
+
+#	sleep(1);
+
+process();
+}
+
+
+my $packetdata;
+
+
+
+sub process()
+{
+	(my $len,my $data) = $port->read(1000);
+
+	
+	
+	$packetdata.=$data;
+
+#	warn $packetdata;
+	
+	while($packetdata =~ s/\\2\\0//)
+	{
+		warn 'ok'
+		
+	}
+
+#	warn $packetdata;
+	while($packetdata =~ s/\\(\d)(.*?)\\0//)
+	{
+		warn 'got packet :'.$1;
+		my $packet = $2;
+#		$packetdata =~ s/\\\d.*?\\0//;
+
+		$packet =~ s/\\\\/\\/go;
+		
+		
+		
+		
+		
+		for(0..(length($packet)-1))
+		{
+			print dec2hex(ord(substr($packet,$_,1)));
+		}
+		print "\n";
+		warn substr($packet,2,1);
+		if( substr($packet,2,1) eq 'J')
+		{
+			warn 'Join';
+			
+			#join: [' ', 'G', 'J', '\xd6', '\xdd', 'O', 'o', '\x02', '\x00', '\x00', '\x00', '\x0b', '\x14', '\x1c', '\x00', '\x10', '0'   , '\x00', '\x00', '\x00', 'Q'   , '\x14', '\x00', '\x00', '\xff', '\x14', '\x00', '\x10', '\x01', '\x00', '<', 'm']
+			#ack : [' ', 'G', 'a', '\xd6', '\xdd', 'O', 'o', '\x02', '\x00', '\x00', '\x00', '\x01', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\xa9', 'o']
+			#setting tx mac [17, 107, 162, 211, 41]
+			my $ACKpacket =chr(32).
+					chr(71).
+					chr(97). #join
+					substr($packet,3,4).
+					substr($packet,7,4).
+					chr(1).chr(0).chr(0).chr(0).
+					chr(0).chr(0).
+					chr(0).
+					chr(0).chr(0).chr(0).chr(0).chr(0).
+					chr(0).
+					chr(0).
+					chr(0).
+					chr(0).chr(0).chr(0).chr(0);
+
+	print "Join:";
+	for(0..(length($packet)-1))
+	{
+		print dec2hex(ord(substr($packet,$_,1)));
+	}
+	print "\n";
+
+#Join:    20474a 87d8337d 020000006e071c00103000000051140000ff1400100100f891
+#Ack :5c31204761 87d8337d 010000006e0753fc0736c647001e105465747269735649	
+
+			my $crc = crc16($ACKpacket);
+			$ACKpacket = cmd(1).$ACKpacket.chr($crc>>8).chr($crc&0xff).cmd(0);
+	
+	print "Ack :";
+	for(0..(length($packet)-1))
+	{
+		print dec2hex(ord(substr($ACKpacket,$_,1)));
+	}
+	print "\n";
+
+			$port->write(cmd(3).chr(252).chr(7).chr(54).chr(198).chr(72).cmd(0));
+
+
+			$port->write($ACKpacket);
+
+			#set tx back to mac to REM0T (82, 69, 77, 48, 84)
+			$port->write(cmd(3).chr(82).chr(69).chr(77).chr(48).chr(84).cmd(0));
+
+		}
+#		  0 1 2 3 4 5 6 7 8 9101112
+		#20474ad2c1e12e020000006e071c00103000000099160000ff14001001003c38
+		
+		
+		
+		print "\n";
+		
+	}
+	
+}
+
+
+
+sub crc16($)
+{
+	my $str = shift;
+	my $crc = 0xffff;
+
+
+	for(0..(length($str)-1))
+	{
+		$crc  = ($crc >> 8)|(($crc << 8)& 0xff00);
+		$crc ^= ord(substr($str,$_,1));
+		$crc ^= ($crc & 0xff) >> 4;
+		$crc ^= ($crc << 12) & 0xff00;
+		$crc ^= ($crc & 0xff) << 5;
+	}
+	
+	s/\x5C/\/\//;
+	
+	return $crc;
+};
+                                                        
+
+#writing ['\\', '1', ' ', 'G', 'A', '\x00', '\x00', '\x00', '\x00', '\x01', '\x00', '\x00', '\x00', '\xfc', '\x07', '6', '\xbd', 'G'   , 'S', 'n'   , '\x07',     '\x00', '\x1e', '\x10', 'T', 'e', 't', 'r', 'i', 's', 'V', 'I', '\x9a', '\xce', '\\', '0']
+#sending Announce packet with id=0, ctr=2, gameMac=[252, 7, 54, 189, 71], gameChannel=83, gameId=1902, gameFlags=0, gameTitle=TetrisVI
+#writing ['\\', '1', ' ', 'G', 'A', '\x00', '\x00', '\x00', '\x00', '\x02', '\x00', '\x00', '\x00', '\xfc', '\x07', '6', '\xbd', 'G'   , 'S', 'n'   , '\x07',     '\x00', '\x1e', '\x10', 'T', 'e', 't', 'r', 'i', 's', 'V', 'I', '5', '\xd3', '\\', '0']
+#sending Announce packet with id=0, ctr=3, gameMac=[252, 7, 54, 189, 71], gameChannel=83, gameId=1902, gameFlags=0, gameTitle=TetrisVI
+#writing ['\\', '1', ' ', 'G', 'A', '\x00', '\x00', '\x00', '\x00', '\x03', '\x00', '\x00', '\x00', '\xfc', '\x07', '6', '\xbd', 'G'   , 'S', 'n'   , '\x07',     '\x00', '\x1e', '\x10', 'T', 'e', 't', 'r', 'i', 's', 'V', 'I', 'P', '\xd8', '\\', '0']
+#sending Announce packet with id=0, ctr=3, gameMac=[244, 159, 78, 230, 145], gameChannel=83, gameId=23736, gameFlags=0, gameTitle=TetrisVI
+#writing ['\\', '1', ' ', 'G', 'A', '\x00', '\x00', '\x00', '\x00', '\x03', '\x00', '\x00', '\x00', '\xf4', '\x9f', 'N', '\xe6', '\x91', 'S', '\xb8', '\\', '\\', '\x00', '\x1e', '\x10', 'T', 'e', 't', 'r', 'i', 's', 'V', 'I', '\xcb', '\xe6', '\\', '0']
+#sending Announce packet with id=0, ctr=5, gameMac=[128, 209, 112, 252, 241], gameChannel=83, gameId=32730, gameFlags=0, gameTitle=TetrisVI
+#writing ['\\', '1', ' ', 'G', 'A', '\x00', '\x00', '\x00', '\x00', '\x05', '\x00', '\x00', '\x00', '\x80', '\xd1', 'p', '\xfc', '\xf1', 'S', '\xda', '\x7f',     '\x00', '\x1e', '\x10', 'T', 'e', 't', 'r', 'i', 's', 'V', 'I', '\xc2', '\x80', '\\', '0']
+
+
+
+
+	#set channel to 83
+	#$port->write(cmd(5).chr(81).cmd(0));
+
+
+
+
+
+#$port->read(1);
+#$port->close();
+
+
+sub cmd($)
+{
+	my $cmd = shift;
+	return chr(92).chr(48+$cmd);
+}
+
+sub dec2hex($)
+{
+  return sprintf("%02x",shift);
+}
+
+__END__
+
+struct packet{
+
+	//11 common bytes
+    uint8_t len;
+    uint8_t protocol;
+    uint8_t command;
+    uint32_t id;
+    uint32_t ctr;
+    
+    //19 bytes, differ per packet type
+    union content{
+        struct button{
+            uint8_t button;
+            uint8_t reserved[18];
+        }__attribute__((packed)) button;
+        struct ack{
+           uint8_t flags;
+           uint8_t reserved[18];
+        }__attribute__((packed)) ack;
+        struct announce{
+           uint8_t gameMac[5];
+           uint8_t gameChannel;
+           uint16_t gameId;
+           uint8_t gameFlags;
+           uint8_t interval;
+           uint8_t jitter;
+           uint8_t gameTitle[8];
+        }__attribute__((packed)) announce;
+        struct join{
+           uint16_t gameId;
+           uint8_t reserved[17];
+        }__attribute__((packed)) join;
+    }c;
+    uint16_t crc;
+}__attribute__((packed));
