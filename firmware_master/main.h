@@ -1,6 +1,13 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 
+#include <stdint.h>
+#include "core/LPC17xx.h"
+
+
+#ifndef NULL
+#define NULL ((void *) 0)
+#endif
 
 
 #define set_cs()    (LPC_GPIO2->FIOPIN |=  (1 << 1))
@@ -42,5 +49,12 @@ int button_down(unsigned int nr, unsigned int button);
 void push_lines(unsigned int nr, unsigned int lines);
 int is_occupied(unsigned int nr);
 
+
+
+uint16_t crc16(uint8_t * buf, int len);
+
+void ssp1_send_byte (uint8_t buf);
+void sspSend(uint8_t portNum, const uint8_t *buf, uint32_t length);
+void delay_ms(uint32_t delay_period_ms);
 
 #endif

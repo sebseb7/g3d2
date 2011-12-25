@@ -131,4 +131,9 @@ sub dec2hex($)
 {
   return sprintf("%02x",shift);
 }
+sub cmd($)
+{
+    my $cmd = shift;
+    return chr(92).chr(48+$cmd);
+}
 

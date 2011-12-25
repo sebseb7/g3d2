@@ -2,8 +2,8 @@
 #include <stdio.h>
 
 
-#include "core/LPC17xx.h"
 #include "drivers/uart0.h"
+#include "drivers/nrf24l01p.h"
 #include "tetris.h"
 #include "main.h"
 #include "font8x6.h"
@@ -21,6 +21,18 @@ volatile uint8_t LCD_ORIENTATION=0;
 
 volatile uint8_t display_buffer[DISP_BUFFER];
 
+#define CHANNEL 81
+#define MAC     "\x52\x45\x4D\x30\x54"
+
+
+struct NRF_CFG config = {
+    .channel= CHANNEL,
+    .txmac= MAC,
+    .nrmacs=1,
+    .mac0=  MAC,
+    .maclen ="\x20",
+};
+    
 
 void sspSend (uint8_t portNum, const uint8_t *buf, uint32_t length)
 {
@@ -70,9 +82,13 @@ void lcd_cls (void)
 	uint16_t i, j;
 
 //	memset (display_buffer, 0, 1024);
+
+
 	for (i = 0; i < DISP_BUFFER; i++)
 		display_buffer[i] = 0x00;
 
+
+	clr_cs ();
 	for (i = 0; i < 8; i++)
 	{
 		clr_A0 ();
@@ -86,6 +102,7 @@ void lcd_cls (void)
 		for (j = 0; j < 128; j++)
 			ssp1_send_byte (0x00);
 	}
+	set_cs ();
 
 //	lcd_xpos = 0;
 //	lcd_ypos = 0;
@@ -101,6 +118,7 @@ void set_adress (uint16_t adress, uint8_t data)
 
 	//UART0_Sendchar(page);
 
+	clr_cs ();
 
 	clr_A0 ();
 	ssp1_send_byte (0xB0 + page);
@@ -118,6 +136,10 @@ void set_adress (uint16_t adress, uint8_t data)
 
 	set_A0 ();
 	ssp1_send_byte (data);
+
+
+	set_cs ();
+
 }
 
 void lcd_plot (uint8_t xpos, uint8_t ypos, uint8_t mode)
@@ -281,19 +303,14 @@ int main(void)
 	ssp1_send_byte (0x00);// off
 	ssp1_send_byte (0xAF);// display on / 0xAE == off
 
+	set_cs ();
+
+
 	lcd_cls ();
 
-	int x,y;
-	for(x=0;x < 60;x++)
-		for(y=0;y<60;y++)
-//			lcd_plot(x,y,1);
 			
-			
-	lcd_plot(2,1,1);
-	lcd_plot(3,1,1);
-	lcd_plot(4,1,1);
 
-	lcd_putc (2,2,49,1);
+	lcd_putc (6,6,49,1);
 
 
 	// sets SystemCoreClock to 44583722, but why ? 
@@ -314,10 +331,28 @@ int main(void)
 		LPC_GPIO1->FIOPIN &=  ~(1<<19);
 
 
+	//ce
+	LPC_GPIO2->FIODIR |= (1<<2);
+	//cs_rad
+	LPC_GPIO2->FIODIR |= (1<<6);
+
+//	nrf_init();
+//	nrf_config_set(&config);
+
+
 	tetris_load();
 
 	while(1)
 	{
+
+		uint8_t serialmsg_message[32] = { 0x5c,0x31,0x20,0x47,0x41,0x00,0x00,0x00,0x00,0x05,0x00,0x00,0x00,0xfc,0x07,0x36,0xc6,0x47,0x53,0x6e,0x07,0x00,0x05,0x10,0x54,0x65,0x74,0x72,0x69,0x73,0x56,0x49,0x61,0x2f,0x5c,0x30 };
+
+		delay_ms(5);
+//	nrf_config_set(&config);
+		delay_ms(5);
+
+//		snd_pkt_no_crc(32, serialmsg_message);
+		delay_ms(5);
 
 		timeout_ms = 20;
 
