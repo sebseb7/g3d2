@@ -37,9 +37,17 @@ int main(void)
 	timeout_ms=0;
 
 	/* Turn on all of port 1 (this includes the 4 mbed LEDs) */
-	LPC_GPIO0->FIODIR |= (1<<19)|(1<<20);
+	LPC_GPIO1->FIODIR |= (1<<25)|(1<<21)|(1<<19);
+
+
+		LPC_GPIO1->FIOPIN |=  (1<<25);
+		delay_ms(200);
+		LPC_GPIO1->FIOPIN &=  ~(1<<21);
+		delay_ms(200);
+
 	
-	UART0_Init(500000);
+//	UART0_Init(500000);
+	UART0_Init(115200);
 	
 	// sets SystemCoreClock to 44583722, but why ? 
 	SystemCoreClockUpdate();
@@ -84,6 +92,18 @@ int main(void)
 			button_state[BUTTON_DOWN] = 1;
 		}
 
+		LPC_GPIO1->FIOPIN |=  (1<<25);
+		delay_ms(200);
+		LPC_GPIO1->FIOPIN |=  (1<<21);
+		delay_ms(200);
+		LPC_GPIO1->FIOPIN |=  (1<<19);
+		delay_ms(200);
+		LPC_GPIO1->FIOPIN &=  ~(1<<25);
+		delay_ms(200);
+		LPC_GPIO1->FIOPIN &=  ~(1<<21);
+		delay_ms(200);
+		LPC_GPIO1->FIOPIN &=  ~(1<<19);
+		delay_ms(200);
 
 		tetris_update();	
 		delay_ms(20);
@@ -91,8 +111,8 @@ int main(void)
 
 }
 
-int button_down(unsigned int button) {
-	return button_state[button]-->0;
+int button_down(unsigned int nr,unsigned int button) {
+	return 0;
 }
 
 void pixel(int x, int y, unsigned char color) 
@@ -139,3 +159,11 @@ static unsigned int my_rand(void) {
 unsigned int rand_int(unsigned int limit) {
     return my_rand() % limit;
 }
+
+int is_occupied(unsigned int nr) {
+    return 0;
+}
+void push_lines(unsigned int nr, unsigned int lines)
+{
+}
+    
