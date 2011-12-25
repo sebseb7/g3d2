@@ -79,6 +79,7 @@ void ssp1_send_byte (uint8_t buf)
 
 void lcd_cls (void)
 {
+	return;
 	uint16_t i, j;
 
 //	memset (display_buffer, 0, 1024);
@@ -111,6 +112,9 @@ void lcd_cls (void)
 
 void set_adress (uint16_t adress, uint8_t data)
 {
+	return;
+
+
 	uint8_t page;
 	uint8_t column;
 
@@ -263,13 +267,16 @@ int main(void)
       
       
     // 25 Mhz ?  
-    LPC_SSP1->CPSR = 3;
+    //LPC_SSP1->CPSR = 3;
+
+    LPC_SSP1->CPSR = 10;
         
     //LPC_SSP1->IMSC = 0x0006;
           
     LPC_SSP1->CR0  = 0x0007;                        /* 8Bit, CPOL=0, CPHA=0         */
 	LPC_SSP1->CR1  = 0x0002;  
 	
+	delay_ms(100);
 
 	set_cs ();
 	clr_reset ();
@@ -277,7 +284,7 @@ int main(void)
 	set_reset ();
 	set_reset ();
 
-	clr_cs ();
+/*	clr_cs ();
 	clr_A0 ();
 
 
@@ -285,16 +292,12 @@ int main(void)
 	ssp1_send_byte (0xA1);
 	ssp1_send_byte (0xC0);
 	ssp1_send_byte (0xA6);//A6 normal , A7 reverse
-//	ssp1_send_byte (0xA7);//A6 normal , A7 reverse
 	ssp1_send_byte (0xA2);//Set bias 1/9 (Duty 1/65)
 
 
-	//internal contrast voltage
 	ssp1_send_byte (0x2F);// power on 
 	ssp1_send_byte (0xF8);// boster ratio
 	ssp1_send_byte (0x00);// 4x
-	//external contrast voltage
-	//send_byte (0x2D);// power on
 
 	ssp1_send_byte (0x27);// v0 voltage regulator
 	ssp1_send_byte (0x81);// contrast
@@ -304,7 +307,7 @@ int main(void)
 	ssp1_send_byte (0xAF);// display on / 0xAE == off
 
 	set_cs ();
-
+*/
 
 	lcd_cls ();
 
@@ -346,12 +349,14 @@ int main(void)
 	{
 
 		uint8_t serialmsg_message[32] = { 0x5c,0x31,0x20,0x47,0x41,0x00,0x00,0x00,0x00,0x05,0x00,0x00,0x00,0xfc,0x07,0x36,0xc6,0x47,0x53,0x6e,0x07,0x00,0x05,0x10,0x54,0x65,0x74,0x72,0x69,0x73,0x56,0x49,0x61,0x2f,0x5c,0x30 };
-
-		delay_ms(5);
-//	nrf_config_set(&config);
 		delay_ms(5);
 
-//		snd_pkt_no_crc(32, serialmsg_message);
+	nrf_init();
+		delay_ms(5);
+	nrf_config_set(&config);
+		delay_ms(5);
+
+		snd_pkt_no_crc(32, serialmsg_message);
 		delay_ms(5);
 
 		timeout_ms = 20;
