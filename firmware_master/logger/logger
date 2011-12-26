@@ -1,0 +1,139 @@
+#!/usr/bin/perl
+
+use Device::SerialPort;
+use Time::HiRes qw(usleep time);
+use strict;
+
+#cu.usbmodem3a21         cu.usbmodem5a11         cu.usbmodem5a21         cu.usbmodem5d11
+
+
+my $port1 = Device::SerialPort->new("/dev/cu.usbmodem3a21");
+$port1->databits(8);
+$port1->baudrate(115200);
+$port1->parity("none");
+$port1->stopbits(1);
+my $port2 = Device::SerialPort->new("/dev/cu.usbmodem5a11");
+$port2->databits(8);
+$port2->baudrate(115200);
+$port2->parity("none");
+$port2->stopbits(1);
+my $port3 = Device::SerialPort->new("/dev/cu.usbmodem5a21");
+$port3->databits(8);
+$port3->baudrate(115200);
+$port3->parity("none");
+$port3->stopbits(1);
+
+#set mac length to:   32 ? 
+$port1->write(cmd(6).chr(32).cmd(0));
+$port2->write(cmd(6).chr(32).cmd(0));
+$port3->write(cmd(6).chr(32).cmd(0));
+#set game mac (rx mac) to 252:7:54:198:71
+$port1->write(cmd(4).chr(85).chr(195).chr(210).chr(40).chr(195).cmd(0));
+$port2->write(cmd(4).chr(85).chr(195).chr(210).chr(40).chr(196).cmd(0));
+$port3->write(cmd(4).chr(82).chr(69).chr(77).chr(48).chr(84).cmd(0));
+#set channel to 83 
+$port1->write(cmd(5).chr(83).cmd(0));
+$port2->write(cmd(5).chr(83).cmd(0));
+$port3->write(cmd(5).chr(81).cmd(0));
+#set tx mac to REM0T (82, 69, 77, 48, 84)
+$port1->write(cmd(3).chr(82).chr(69).chr(77).chr(48).chr(84).cmd(0));
+$port2->write(cmd(3).chr(82).chr(69).chr(77).chr(48).chr(84).cmd(0));
+$port3->write(cmd(3).chr(82).chr(69).chr(77).chr(48).chr(84).cmd(0));
+
+
+my $count=0;
+my $lasta;
+while(1)
+{
+	process();
+}
+
+
+my $packetdata1;
+my $packetdata2;
+my $packetdata3;
+
+
+
+sub process()
+{
+	(my $len1,my $data1) = $port1->read(1000);
+	(my $len2,my $data2) = $port2->read(1000);
+	(my $len3,my $data3) = $port3->read(1000);
+
+	return if ($len1 == 0)&($len2 == 0)&($len3 == 0);
+
+	$packetdata1.=$data1;
+	$packetdata2.=$data2;
+	$packetdata3.=$data3;
+
+	while($packetdata1 =~ s/(\\[1-6].*?\\0)//)
+	{
+		logg(1,$1);
+	}
+	while($packetdata2 =~ s/(\\[1-6].*?\\0)//)
+	{
+		logg(2,$1);
+	}
+	while($packetdata3 =~ s/(\\[1-6].*?\\0)//)
+	{
+		logg(3,$1);
+	}
+}
+
+sub logg($)
+{
+	my $id = shift;
+		my $packet = shift;
+		$packet =~ s/\\\\/\\/go;
+		
+		my $localtime = '['.localtime(time).']('.$id.') ';
+	
+		my $msec = sprintf("%003d",int ((time - int time) * 1000));
+		
+		$localtime =~ s/:(\d\d) /:$1.$msec /;
+	
+		print $localtime.' ';
+		for(0..(length($packet)-1))
+		{
+			print dec2hex(ord(substr($packet,$_,1)));
+		}
+		
+		print '   '.substr($packet,4,1);
+		
+		print "\n";
+}
+
+
+
+sub crc16($)
+{
+	my $str = shift;
+	my $crc = 0xffff;
+
+
+	for(0..(length($str)-1))
+	{
+		$crc  = ($crc >> 8)|(($crc << 8)& 0xff00);
+		$crc ^= ord(substr($str,$_,1));
+		$crc ^= ($crc & 0xff) >> 4;
+		$crc ^= ($crc << 12) & 0xff00;
+		$crc ^= ($crc & 0xff) << 5;
+	}
+	
+	s/\x5C/\/\//;
+	
+	return $crc;
+};
+                                                        
+
+sub dec2hex($)
+{
+  return sprintf("%02x",shift);
+}
+sub cmd($)
+{
+    my $cmd = shift;
+    return chr(92).chr(48+$cmd);
+}
+

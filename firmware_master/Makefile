@@ -5,7 +5,7 @@ ifeq ($(OSTYPE),)
 OSTYPE      = $(shell uname)
 endif
 ifneq ($(findstring Darwin,$(OSTYPE)),)
-USB_DEVICE = $(shell ls /dev/cu.usbserial*)
+USB_DEVICE = $(shell ls /dev/cu.usbserial-A*)
 else
 USB_DEVICE = /dev/ttyUSB0
 endif
@@ -25,7 +25,7 @@ HEADERS=$(wildcard core/*.h drivers/*.h libs/*.h *.h) pixelfonts/5x3/font.h
 #  Compiler Options
 GCFLAGS = -std=gnu99 -Wall -fno-common -mcpu=cortex-m3 -mthumb -O$(OPTIMIZATION) $(DEBUG) 
 # -ffunction-sections -fdata-sections -fmessage-length=0   -fno-builtin
-GCFLAGS += -D__RAM_MODE__=0 
+GCFLAGS += -D__RAM_MODE__=0  -I.
 LDFLAGS = -mcpu=cortex-m3 -mthumb -O$(OPTIMIZATION) -nostartfiles  -T$(LSCRIPT) 
 ASFLAGS = -mcpu=cortex-m3 --defsym RAM_MODE=0
 
@@ -65,6 +65,6 @@ clean:
 #########################################################################
 
 flash: all
-	lpc21isp -verify $(PROJECT).hex  $(USB_DEVICE) 115200 14746
+	lpc21isp $(PROJECT).hex  $(USB_DEVICE) 230400 14746
 #	lpc21isp -verify $(PROJECT).hex  $(USB_DEVICE) 19200 14746
 
