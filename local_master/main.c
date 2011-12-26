@@ -58,7 +58,7 @@ int main(int argc,char** argv)
 
 
 
-int button_down(unsigned int button) {
+int button_down(unsigned int button,int nr) {
 
 	return 0;
 }
@@ -123,3 +123,12 @@ static unsigned int my_rand(void) {
 unsigned int rand_int(unsigned int limit) {
     return my_rand() % limit;
 }
+
+int is_occupied(unsigned int nr) {
+	return 0;
+
+}
+
+void push_lines(unsigned int nr, unsigned int lines)
+{
+};
