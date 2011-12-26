@@ -46,6 +46,12 @@ int main(int argc,char** argv)
                                                             
 
 	tetris_load();
+	add_player();
+	add_player();
+	add_player();
+	add_player();
+	add_player();
+	add_player();
 
 	while(1)
 	{
@@ -58,8 +64,8 @@ int main(int argc,char** argv)
 
 
 
-int button_down(unsigned int button) {
-
+int button_down(unsigned int nr, unsigned int button)
+{
 	return 0;
 }
 
@@ -101,13 +107,13 @@ void pixel(int x, int y, unsigned char color)
 //			UART0_Sendchar(color);
 			c=color;
 			write(tty_fd,&c,1);
-			usleep(200);
+			usleep(250);
 
 }
         
 // found it in the internet...
 static unsigned int my_rand(void) {
-    static unsigned int z1 = 12345, z2 = 12345, z3 = 12345, z4 = 12345;
+    static unsigned int z1 = 212, z2 = 341, z3 = 12345, z4 = 1234;
     unsigned int b;
     b  = ((z1 << 6) ^ z1) >> 13;
     z1 = ((z1 & 4294967294U) << 18) ^ b;

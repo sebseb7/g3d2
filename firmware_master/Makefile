@@ -65,6 +65,6 @@ clean:
 #########################################################################
 
 flash: all
-	lpc21isp -verify $(PROJECT).hex  $(USB_DEVICE) 230400 14746
+	lpc21isp -verify $(PROJECT).hex  $(USB_DEVICE) 115200 14746
 #	lpc21isp -verify $(PROJECT).hex  $(USB_DEVICE) 19200 14746
 
