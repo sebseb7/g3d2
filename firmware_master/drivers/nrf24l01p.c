@@ -1,5 +1,6 @@
 #include <drivers/nrf24l01p.h>
 #include <main.h>
+#include "drivers/ssp.h"
 
 #define DEFAULT_SPEED R_RF_SETUP_DR_2M
 
@@ -9,7 +10,7 @@ uint8_t _nrfresets=0;
 /* Transmit a byte via SPI                                               */
 /*-----------------------------------------------------------------------*/
 inline void xmit_spi(uint8_t dat) {
-    ssp1_send_byte (dat);
+    sspSendByte (dat);
 //    sspSend(0, (uint8_t*) &dat, 1);
 }
 
@@ -47,7 +48,7 @@ void nrf_write_reg(const uint8_t reg, const uint8_t val){
 void nrf_write_long(const uint8_t cmd, int len, const uint8_t* data){
     CS_LOW();
     xmit_spi(cmd);
-    sspSend(0,data,len);
+    sspSend(data,len);
     CS_HIGH();
 };
 
@@ -163,7 +164,7 @@ char snd_pkt_no_crc(int size, uint8_t * pkt)
 
     CS_LOW();
     xmit_spi(C_W_TX_PAYLOAD);
-    sspSend(0,pkt,size);
+    sspSend(pkt,size);
     CS_HIGH();
     CS_HIGH();
     CS_HIGH();
@@ -178,7 +179,7 @@ char snd_pkt_no_crc(int size, uint8_t * pkt)
 
 
 inline void rcv_spi(uint8_t *dat) {
-    sspReceive(0, dat, 1);
+    sspReceive(dat, 1);
 }
 
 
@@ -187,7 +188,7 @@ void nrf_read_long(const uint8_t cmd, int len, uint8_t* data){
     xmit_spi(cmd);
     for(int i=0;i<len;i++)
         data[i] = 0x00;
-    sspSendReceive(0,data,len);
+    sspSendReceive(data,len);
     CS_HIGH();
 };
 
@@ -210,14 +211,14 @@ void nrf_rcv_pkt_start(void){
 void nrf_read_pkt(int len, uint8_t* data){
     CS_LOW();
     xmit_spi(C_R_RX_PAYLOAD);
-    sspReceive(0,data,len);
+    sspReceive(data,len);
     CS_HIGH();
 };
 
 
 uint8_t nrf_cmd_status(uint8_t cmd){
     CS_LOW();
-    sspSendReceive(0, &cmd, 1);
+    sspSendReceive(&cmd, 1);
     CS_HIGH();
     return cmd;
 };
