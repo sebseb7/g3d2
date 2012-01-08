@@ -26,6 +26,8 @@ foreach my $char (0..35)
 	print_char($char);
 }
 
+print outfile "#else\n";
+print_char(99);
 
 
 print outfile "#endif\n\n\n";

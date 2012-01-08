@@ -75,6 +75,8 @@ uint8_t addrfont[] = {119,17,119,17,119};
 uint8_t addrfont[] = {117,21,119,17,113};
 #elif ADDR_135
 uint8_t addrfont[] = {119,20,119,17,119};
+#else
+uint8_t addrfont[] = {119,85,119,17,119};
 #endif
 
 
