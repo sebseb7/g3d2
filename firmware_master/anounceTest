@@ -4,33 +4,40 @@ use Device::SerialPort;
 use Time::HiRes qw(usleep time);
 use strict;
 
-my $port = Device::SerialPort->new("/dev/cu.usbmodem5d11");
+my $port = Device::SerialPort->new("/dev/cu.usbmodem621");
 $port->databits(8);
 $port->baudrate(115200);
 $port->parity("none");
 $port->stopbits(1);
 
+#warn $port;
+
+
+warn 'x';
 
 #set mac length to:   32 ? 
-$port->write(cmd(6).chr(32).cmd(0));
+send_packet(cmd(6).chr(32).cmd(0));
 
 process();
 
 #set game mac (rx mac) to 252:7:54:198:71
-$port->write(cmd(4).chr(252).chr(7).chr(54).chr(198).chr(71).cmd(0));
-process();
-
-#set channel to 83 
-$port->write(cmd(5).chr(83).cmd(0));
+#					chr(85).chr(195).chr(210).chr(40).chr(195).
+#send_packet(cmd(4).chr(85).chr(195).chr(210).chr(40).chr(195).cmd(0));
 process();
 
 #set tx mac to REM0T (82, 69, 77, 48, 84)
-$port->write(cmd(3).chr(82).chr(69).chr(77).chr(48).chr(84).cmd(0));
+send_packet(cmd(3).chr(82).chr(69).chr(77).chr(48).chr(84).cmd(0));
 process();
+#set channel to 83 
+#send_packet(cmd(5).chr(83).cmd(0));
+process();
+
 
 
 my $count=0;
 my $lasta;
+
+my $lastpkt;
 while(1)
 {
 	if(time - $lasta  > 1)
@@ -65,26 +72,37 @@ while(1)
 					chr(65).
 					chr(0).chr(0).chr(0).chr(0).
 					chr($count++).chr(0).chr(0).chr(0).
-					chr(252).chr(7).chr(54).chr(198).chr(71).
+					chr(85).chr(195).chr(210).chr(40).chr(195).
 					chr(83).
-					chr(110).chr(7).
+					chr(195).chr(210).
 					chr(0).
 					chr(5).
 					chr(16).
-					'TetrisVI';
+					'tetrisVI';
 	
 	
 	
 	#$port->write($paket.crc($paket, 16).cmd(0));
 
 	my $crc = crc16($packet);	
+	
+#	warn $crc>>8;
+#	warn $crc&0xff;
 
 	$packet = cmd(1).$packet.chr($crc>>8).chr($crc&0xff).cmd(0);
 	
 	$port->write($packet);
+	
+	$lastpkt = $packet;
 
 	#set channel to 83
 	$port->write(cmd(5).chr(83).cmd(0));
+
+	for(0..(length($packet)-1))
+	{
+		print ' '.dec2hex(ord(substr($packet,$_,1)));
+	}
+	print "\n";
 	
 	}
 
@@ -99,11 +117,6 @@ while(1)
 #	for(0..(length($packet)-1))
 #	{
 #		print ord(substr($packet,$_,1)).'-';
-#	}
-#	print "\n";
-#	for(0..(length($packet)-1))
-#	{
-#		print dec2hex(ord(substr($packet,$_,1)));
 #	}
 #	print "\n";
 					
@@ -135,95 +148,18 @@ sub process()
 {
 	(my $len,my $data) = $port->read(1000);
 
-	
-	
-	$packetdata.=$data;
+#	warn 'READ:'.$data if $len;
 
-#	warn $packetdata;
-	
-	while($packetdata =~ s/\\2\\0//)
+	if($len)
 	{
-		warn 'ok'
-		
+#		warn $len;
+		warn 'data'.$data;
+		warn 'last'.$lastpkt;	
 	}
-
-#	warn $packetdata;
-	while($packetdata =~ s/\\(\d)(.*?)\\0//)
-	{
-		warn 'got packet :'.$1;
-		my $packet = $2;
-#		$packetdata =~ s/\\\d.*?\\0//;
-
-		$packet =~ s/\\\\/\\/go;
-		
-		
-		
-		
-		
-		for(0..(length($packet)-1))
-		{
-			print dec2hex(ord(substr($packet,$_,1)));
-		}
-		print "\n";
-		warn substr($packet,2,1);
-		if( substr($packet,2,1) eq 'J')
-		{
-			warn 'Join';
-			
-			#join: [' ', 'G', 'J', '\xd6', '\xdd', 'O', 'o', '\x02', '\x00', '\x00', '\x00', '\x0b', '\x14', '\x1c', '\x00', '\x10', '0'   , '\x00', '\x00', '\x00', 'Q'   , '\x14', '\x00', '\x00', '\xff', '\x14', '\x00', '\x10', '\x01', '\x00', '<', 'm']
-			#ack : [' ', 'G', 'a', '\xd6', '\xdd', 'O', 'o', '\x02', '\x00', '\x00', '\x00', '\x01', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\xa9', 'o']
-			#setting tx mac [17, 107, 162, 211, 41]
-			my $ACKpacket =chr(32).
-					chr(71).
-					chr(97). #join
-					substr($packet,3,4).
-					substr($packet,7,4).
-					chr(1).chr(0).chr(0).chr(0).
-					chr(0).chr(0).
-					chr(0).
-					chr(0).chr(0).chr(0).chr(0).chr(0).
-					chr(0).
-					chr(0).
-					chr(0).
-					chr(0).chr(0).chr(0).chr(0);
-
-	print "Join:";
-	for(0..(length($packet)-1))
-	{
-		print dec2hex(ord(substr($packet,$_,1)));
-	}
-	print "\n";
-
-#Join:    20474a 87d8337d 020000006e071c00103000000051140000ff1400100100f891
-#Ack :5c31204761 87d8337d 010000006e0753fc0736c647001e105465747269735649	
-
-			my $crc = crc16($ACKpacket);
-			$ACKpacket = cmd(1).$ACKpacket.chr($crc>>8).chr($crc&0xff).cmd(0);
+	$lastpkt = '';
 	
-	print "Ack :";
-	for(0..(length($packet)-1))
-	{
-		print dec2hex(ord(substr($ACKpacket,$_,1)));
-	}
-	print "\n";
-
-			$port->write(cmd(3).chr(252).chr(7).chr(54).chr(198).chr(72).cmd(0));
-
-
-			$port->write($ACKpacket);
-
-			#set tx back to mac to REM0T (82, 69, 77, 48, 84)
-			$port->write(cmd(3).chr(82).chr(69).chr(77).chr(48).chr(84).cmd(0));
-
-		}
-#		  0 1 2 3 4 5 6 7 8 9101112
-		#20474ad2c1e12e020000006e071c00103000000099160000ff14001001003c38
-		
-		
-		
-		print "\n";
-		
-	}
+	return;
+	
 	
 }
 
@@ -242,6 +178,7 @@ sub crc16($)
 		$crc ^= ($crc & 0xff) >> 4;
 		$crc ^= ($crc << 12) & 0xff00;
 		$crc ^= ($crc & 0xff) << 5;
+		
 	}
 	
 	s/\x5C/\/\//;
@@ -285,6 +222,19 @@ sub dec2hex($)
   return sprintf("%02x",shift);
 }
 
+sub send_packet($)
+{
+	my $packet = shift;
+	
+	for(0..(length($packet)-1))
+	{
+		print ' '.dec2hex(ord(substr($packet,$_,1)));
+	}
+	
+	$port->write($packet);
+}
+
+
 __END__
 
 struct packet{
@@ -322,3 +272,4 @@ struct packet{
     }c;
     uint16_t crc;
 }__attribute__((packed));
+

@@ -17,9 +17,13 @@ enum {
 	BUTTON_SELECT,
 };
 
-int button_down(unsigned int button);
-
+int button_down(unsigned int nr, unsigned int button);
 void pixel(int x, int y, unsigned char color);
 unsigned int rand_int(unsigned int limit);
+
+int is_occupied(unsigned int nr);
+
+void push_lines(unsigned int nr, unsigned int lines);
+
 
 #endif

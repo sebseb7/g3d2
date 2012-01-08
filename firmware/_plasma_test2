@@ -8,7 +8,7 @@ use strict;
 my $hostname = `hostname`;
 chomp $hostname;
 
-my $port = "/dev/cu.usbserial-A100DDXN";
+my $port = "/dev/cu.usbserial-A2002QDi";
 if($hostname eq 'lennyvm')
 {
     $port = '/dev/ttyUSB0';
@@ -33,13 +33,20 @@ foreach my $i (0..2303)
     $pixbuf[$i]=0;
 }
 
+my $sleeptime = 23500;
 
+my $z2=0;
+my $z3=0;
+my $z4=0;
 
+my $frame=0;
 while(1)
 {
-	$z+= ((1-sin($z1))/90);
-	$z1+=0.10105;
-warn $z1;
+	$z+= ((1-sin($z1))/60);
+	$z1+=.1;
+	$z2+=.13;
+	$z3++;
+	$z4++;
 	$port->write(chr(103));
 	my $time1 = time;
  
@@ -49,17 +56,20 @@ warn $z1;
 
 
 	
-	foreach my $y (0..71)
+	foreach my $x (0..31)
 	{
-		foreach my $x (0..31)
+		my $xpos = ((($x-$x%8)/8) * 576)+($x%8);
+		
+		my $xfac = sin($z1)*2*sin($x/8);
+		
+		foreach my $y (0..71)
 		{
-
-			my $num =  sin($x/4+sin($z*3)*9) + sin($z1*sin($x/3)*0.14) + sin($z1*2)
+			my $num = $xfac + 2*sin($y/8)*sin($z2);
 			
-			+ sin(($y+$z1)/6+sin($z*10)*3);
+			
+		
+			$num = int $num*16+16;
 
-
-			$num = int(abs $num*9)%32;
 		
 			if($num > 15)
 			{
@@ -67,12 +77,14 @@ warn $z1;
 			}
 
 			$num=1 if $num<1;
+			
 
-			$pixel++;
-			$pixbuf[($y*8+($x%8)+((($x-$x%8)/8) * 576))]=$num;
+
+			$pixbuf[($y*8+$xpos)]=$num;
 			
 		}
 	}
+
 
 	my $pixel = 0;
 	foreach my $mod (1..36)
@@ -80,16 +92,28 @@ warn $z1;
 		my $str;
 		foreach my $pix (1..32)
 		{
-			$str.=chr($pixbuf[$pixel]+$pixbuf[$pixel]*16);
+			$str.=chr($pixbuf[$pixel]+$pixbuf[$pixel+1]*16);
 			$pixel++;
 			$pixel++;
 		}
-		$port->write(&esc($str));
+		$port->write(esc($str));
 	}
 
-#	usleep(17000);
+	usleep($sleeptime);
+	
+	
+	
+	my $fps = 1 / (time - $time1);
 
-	warn 1 / (time - $time1);
+	$frame++;
+	if($frame == 40)
+	{
+		warn "$fps $sleeptime";
+		$frame=0;
+	}
+	
+	$sleeptime+=100 if$fps > 40;
+	$sleeptime-=100 if$fps < 40;
 }
 
 $port->close();
