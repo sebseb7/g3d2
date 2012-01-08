@@ -20,10 +20,10 @@ inline void xmit_spi(uint8_t dat) {
 #define CE_HIGH()   gpioSetValue(RB_NRF_CE, 1)
 */
 
-#define CE_HIGH()    (LPC_GPIO2->FIOPIN |=  (1 << 6))
-#define CE_LOW()    (LPC_GPIO2->FIOPIN &= ~(1 << 6))
-#define CS_HIGH()    (LPC_GPIO2->FIOPIN |=  (1 << 2))
-#define CS_LOW()    (LPC_GPIO2->FIOPIN &= ~(1 << 2))
+#define CE_HIGH()    (LPC_GPIO2->FIOPIN |=  (1 << 2))
+#define CE_LOW()    (LPC_GPIO2->FIOPIN &= ~(1 << 2))
+#define CS_HIGH()    (LPC_GPIO2->FIOPIN |=  (1 << 6))
+#define CS_LOW()    (LPC_GPIO2->FIOPIN &= ~(1 << 6))
 
 
 void nrf_cmd(uint8_t cmd){
@@ -126,6 +126,7 @@ void nrf_init() {
 //    gpioSetDir(RB_NRF_CE, gpioDirection_Output);
 //    gpioSetPullup(&RB_NRF_CE_IO, gpioPullupMode_PullUp);
     CE_LOW();
+    delay_ms(11);
 
     // Setup for nrf24l01+
     // power up takes 1.5ms - 3.5ms (depending on crystal)
@@ -138,11 +139,14 @@ void nrf_init() {
     
     nrf_write_reg(R_EN_AA, 0); // Disable Enhanced ShockBurst;
 
-    // Set speed / strength
+   // Set speed / strength
     nrf_write_reg(R_RF_SETUP,DEFAULT_SPEED|R_RF_SETUP_RF_PWR_3);
 
     // Clear MAX_RT, just in case.
     nrf_write_reg(R_STATUS,R_STATUS_MAX_RT);
+
+//    CS_HIGH();
+
 };
 
 
@@ -161,6 +165,8 @@ char snd_pkt_no_crc(int size, uint8_t * pkt)
     xmit_spi(C_W_TX_PAYLOAD);
     sspSend(0,pkt,size);
     CS_HIGH();
+    CS_HIGH();
+    CS_HIGH();
 
     CE_HIGH();
     delay_ms(1); // Send it.  (only needs >10ys, i think)
@@ -171,3 +177,88 @@ char snd_pkt_no_crc(int size, uint8_t * pkt)
 };
 
 
+inline void rcv_spi(uint8_t *dat) {
+    sspReceive(0, dat, 1);
+}
+
+
+void nrf_read_long(const uint8_t cmd, int len, uint8_t* data){
+    CS_LOW();
+    xmit_spi(cmd);
+    for(int i=0;i<len;i++)
+        data[i] = 0x00;
+    sspSendReceive(0,data,len);
+    CS_HIGH();
+};
+
+
+// High-Level:
+void nrf_rcv_pkt_start(void){
+
+    nrf_write_reg(R_CONFIG,
+            R_CONFIG_PRIM_RX| // Receive mode
+            R_CONFIG_PWR_UP|  // Power on
+            R_CONFIG_EN_CRC   // CRC on, single byte
+            );
+
+    nrf_cmd(C_FLUSH_RX);
+    nrf_write_reg(R_STATUS,0);
+
+    CE_HIGH();
+};
+
+void nrf_read_pkt(int len, uint8_t* data){
+    CS_LOW();
+    xmit_spi(C_R_RX_PAYLOAD);
+    sspReceive(0,data,len);
+    CS_HIGH();
+};
+
+
+uint8_t nrf_cmd_status(uint8_t cmd){
+    CS_LOW();
+    sspSendReceive(0, &cmd, 1);
+    CS_HIGH();
+    return cmd;
+};
+
+int nrf_rcv_pkt_poll(int maxsize, uint8_t * pkt){
+    uint8_t len;
+    uint8_t status=0;
+
+    for(int i=0;i<maxsize;i++) pkt[i] = 0x00; // Sanity: clear packet buffer
+
+    status =nrf_cmd_status(C_NOP);
+
+    if((status & R_STATUS_RX_P_NO) == R_STATUS_RX_FIFO_EMPTY){
+        if( (status & R_STATUS_RX_DR) == R_STATUS_RX_DR){
+#ifdef USB_CDC
+            puts("FIFO empty, but RX?\r\n");
+#endif
+            nrf_write_reg(R_STATUS,R_STATUS_RX_DR);
+        };
+        return 0;
+    };
+
+    nrf_read_long(C_R_RX_PL_WID,1,&len);
+
+    nrf_write_reg(R_STATUS,R_STATUS_RX_DR);
+    if(len>32 || len==0){
+        return -2; // no packet error
+    };
+
+    if(len>maxsize){
+        return -1; // packet too large
+    };
+
+    nrf_read_pkt(len,pkt);
+
+    return len;
+};
+
+
+void nrf_rcv_pkt_end(void){
+    CE_LOW();
+    nrf_cmd(C_FLUSH_RX);
+    nrf_write_reg(R_STATUS,R_STATUS_RX_DR);
+};

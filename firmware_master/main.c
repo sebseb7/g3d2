@@ -11,7 +11,6 @@
 
 volatile uint32_t timeout_ms = 0;
 volatile uint32_t timeout_delay_ms = 0;
-static int button_state[8];
 
 #define DISP_W 128
 #define DISP_H 64
@@ -25,13 +24,6 @@ volatile uint8_t display_buffer[DISP_BUFFER];
 #define MAC     "\x52\x45\x4D\x30\x54"
 
 
-struct NRF_CFG config = {
-    .channel= CHANNEL,
-    .txmac= MAC,
-    .nrmacs=1,
-    .mac0=  MAC,
-    .maclen ="\x20",
-};
     
 
 void sspSend (uint8_t portNum, const uint8_t *buf, uint32_t length)
@@ -39,8 +31,6 @@ void sspSend (uint8_t portNum, const uint8_t *buf, uint32_t length)
   uint32_t i;
   uint8_t Dummy = Dummy;
 
-  if (portNum == 1)
-  {
     for (i = 0; i < length; i++)
     {
       /* Move on only if NOT busy and TX FIFO not full. */
@@ -54,7 +44,6 @@ void sspSend (uint8_t portNum, const uint8_t *buf, uint32_t length)
       is left in the FIFO. */
       Dummy = LPC_SSP1->DR;
     }
-  }
 
   return;
 }
@@ -77,9 +66,51 @@ void ssp1_send_byte (uint8_t buf)
   return;
 }
 
+
+void sspReceive(uint8_t portNum, uint8_t *buf, uint32_t length)
+{
+  uint32_t i;
+
+    for ( i = 0; i < length; i++ )
+    {
+      /* As long as the receive FIFO is not empty, data can be received. */
+      LPC_SSP1->DR = 0xFF;
+  
+      /* Wait until the Busy bit is cleared */
+      while ( (LPC_SSP1->SR & (1<<4|1<<2)) != (1<<2));
+      
+      *buf = LPC_SSP1->DR;
+      buf++;
+    }
+
+  return; 
+}
+
+
+void sspSendReceive(uint8_t portNum, uint8_t *buf, uint32_t length)
+{
+  uint32_t i;
+  uint8_t Dummy = Dummy;
+
+    for (i = 0; i < length; i++)
+    {
+      /* Move on only if NOT busy and TX FIFO not full. */
+      while ((LPC_SSP1->SR & (1<<1 | 1<<4)) != (1<<1));
+      LPC_SSP1->DR = *buf;
+  
+      while ( (LPC_SSP1->SR & (1<<4|1<<2)) != (1<<2));
+      /* Whenever a byte is written, MISO FIFO counter increments, Clear FIFO 
+      on MISO. Otherwise, when SSP0Receive() is called, previous data byte
+      is left in the FIFO. */
+      *buf = LPC_SSP1->DR;
+      buf++;
+    }
+
+  return; 
+}
+
 void lcd_cls (void)
 {
-	return;
 	uint16_t i, j;
 
 //	memset (display_buffer, 0, 1024);
@@ -112,7 +143,7 @@ void lcd_cls (void)
 
 void set_adress (uint16_t adress, uint8_t data)
 {
-	return;
+//	return;
 
 
 	uint8_t page;
@@ -233,6 +264,9 @@ void delay_ms(uint32_t delay_period_ms)
 
 int main(void) 
 {
+
+
+
 	// don't know why this is incorrect
 	SystemCoreClock = 100000000;
 	SysTick_Config(SystemCoreClock / 1000);
@@ -269,6 +303,7 @@ int main(void)
     // 25 Mhz ?  
     //LPC_SSP1->CPSR = 3;
 
+	// 5 Mhz
     LPC_SSP1->CPSR = 10;
         
     //LPC_SSP1->IMSC = 0x0006;
@@ -276,15 +311,17 @@ int main(void)
     LPC_SSP1->CR0  = 0x0007;                        /* 8Bit, CPOL=0, CPHA=0         */
 	LPC_SSP1->CR1  = 0x0002;  
 	
-	delay_ms(100);
-
 	set_cs ();
 	clr_reset ();
 	delay_ms (10);
 	set_reset ();
 	set_reset ();
 
-/*	clr_cs ();
+
+
+
+
+	clr_cs ();
 	clr_A0 ();
 
 
@@ -307,13 +344,10 @@ int main(void)
 	ssp1_send_byte (0xAF);// display on / 0xAE == off
 
 	set_cs ();
-*/
+
 
 	lcd_cls ();
 
-			
-
-	lcd_putc (6,6,49,1);
 
 
 	// sets SystemCoreClock to 44583722, but why ? 
@@ -328,12 +362,6 @@ int main(void)
 		}
 	}
 
-
-		LPC_GPIO1->FIOPIN &=  ~(1<<25);
-		LPC_GPIO1->FIOPIN &=  ~(1<<21);
-		LPC_GPIO1->FIOPIN &=  ~(1<<19);
-
-
 	//ce
 	LPC_GPIO2->FIODIR |= (1<<2);
 	//cs_rad
@@ -344,25 +372,48 @@ int main(void)
 
 
 	tetris_load();
+		nrf_init();
+		delay_ms(100);
+	struct NRF_CFG config = {
+    	.channel= CHANNEL,
+	    .txmac= MAC,
+	    .nrmacs=1,
+	    .mac0=  MAC,
+	    .maclen ="\x20",
+	};
+		nrf_config_set(&config);
+		delay_ms(50);
+
+
+		uint8_t serialmsg_message[32] = { 0x20,0x47,0x41,0x00,0x00,0x00,0x00,0x05,0x00,0x00,0x00,0xfc,0x07,0x36,0xc6,0x47,0x53,0x6e,0x07,0x00,0x05,0x10,0x54,0x65,0x74,0x72,0x69,0x73,0x56,0x49,0x61,0x2f };
+		delay_ms(50);
 
 	while(1)
 	{
 
-		uint8_t serialmsg_message[32] = { 0x5c,0x31,0x20,0x47,0x41,0x00,0x00,0x00,0x00,0x05,0x00,0x00,0x00,0xfc,0x07,0x36,0xc6,0x47,0x53,0x6e,0x07,0x00,0x05,0x10,0x54,0x65,0x74,0x72,0x69,0x73,0x56,0x49,0x61,0x2f,0x5c,0x30 };
-		delay_ms(5);
 
-	nrf_init();
-		delay_ms(5);
-	nrf_config_set(&config);
-		delay_ms(5);
-
+		nrf_rcv_pkt_end();
 		snd_pkt_no_crc(32, serialmsg_message);
-		delay_ms(5);
+		nrf_rcv_pkt_start();
+
+//		delay_ms(500);
 
 		timeout_ms = 20;
 
 		tetris_update();
+	    
 		
+		int len;
+        uint8_t buf[32];
+        len=nrf_rcv_pkt_poll(sizeof(buf),buf);
+        if( len > 0 ){
+//            puts("\\1");
+//            dump_encoded(len, buf);
+//            puts("\\0");
+        }	
+
+
+
 		if(timeout_ms > 0)
 			delay_ms(timeout_ms);
 	}
@@ -389,24 +440,8 @@ void pixel(int x, int y, unsigned char color)
 	}
 
 	lcd_plot (x, y, col2);
-
-
-	
 	buffer[x][y] = color;
 	
-	y = 31-y;
-
-//	UART0_Sendchar(104);
-			
-	int x2 = x % 8;
-	int y2 = y % 8;
-	
-	int mod = (x-x2)/8 + ((y-y2)/8*MODULES_PER_LINE);
-			
-//	UART0_Sendchar(mod);
-//	UART0_Sendchar(x2);
-//	UART0_Sendchar(y2);
-//	UART0_Sendchar(color);
 
 }
         
