@@ -16,7 +16,7 @@ volatile uint8_t LCD_ORIENTATION=0;
 
 volatile uint8_t display_buffer[DISP_BUFFER];
 
-    
+
 void lcd_cls (void)
 {
 	uint16_t i, j;
@@ -31,9 +31,9 @@ void lcd_cls (void)
 		clr_A0 ();
 		sspSendByte (0xB0 + i);	//1011xxxx
 		sspSendByte (0x10);			//00010000
-//		send_byte(0x04);		//00000100 gedreht plus 4 Byte
+		//		send_byte(0x04);		//00000100 gedreht plus 4 Byte
 		sspSendByte(0x00);		//00000000
-//		sspSendByte (LCD_ORIENTATION);	//00000000
+		//		sspSendByte (LCD_ORIENTATION);	//00000000
 
 		set_A0 ();
 		for (j = 0; j < 128; j++)
@@ -41,8 +41,8 @@ void lcd_cls (void)
 	}
 	set_cs ();
 
-//	lcd_xpos = 0;
-//	lcd_ypos = 0;
+	//	lcd_xpos = 0;
+	//	lcd_ypos = 0;
 }
 
 
@@ -57,15 +57,15 @@ void set_adress (uint16_t adress, uint8_t data)
 	clr_A0 ();
 	sspSendByte (0xB0 + page);
 
-//	column = (adress & 0x7F) + 4; Wenn gedreht
-//	column = (adress & 0x7F);
+	//	column = (adress & 0x7F) + 4; Wenn gedreht
+	//	column = (adress & 0x7F);
 	column = (adress & 0x7f);// + LCD_ORIENTATION;
 
 
 	sspSendByte (0x10 + (((column&0xf0) >> 4)&0x0f));
-//	ssp1_send_byte (0x10 + 0);
+	//	ssp1_send_byte (0x10 + 0);
 	sspSendByte (0x00 + (column & 0x0F));
-//	ssp1_send_byte (0x00 + 0);
+	//	ssp1_send_byte (0x00 + 0);
 
 	set_A0 ();
 	sspSendByte (data);
@@ -112,10 +112,10 @@ void lcd_putc (uint8_t x, uint8_t y, uint8_t c, uint8_t mode)
 
 
 	c &= 0x7f;
-	
+
 	adress = y * 128 + x * 6;
 	adress &= 0x3FF;
-		
+
 	for (i = 0; i < 6; i++)
 	{
 		ch = font8x6[c][i];
@@ -138,7 +138,7 @@ void lcd_putc (uint8_t x, uint8_t y, uint8_t c, uint8_t mode)
 				display_buffer[adress+i] &= ~ch;
 				break;
 		}
-		
+
 		set_adress (adress + i, display_buffer[adress + i]);
 	}
 }

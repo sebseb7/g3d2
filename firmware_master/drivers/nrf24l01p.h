@@ -29,19 +29,19 @@
 #define R_OBSERVE_TX		0x08
 #define R_RPD			0x09
 #define R_RX_ADDR_P0		0x0A
- #define R_RX_ADDR_P0_LEN 5
+#define R_RX_ADDR_P0_LEN 5
 #define R_RX_ADDR_P1		0x0B
- #define R_RX_ADDR_P1_LEN 5
+#define R_RX_ADDR_P1_LEN 5
 #define R_RX_ADDR_P2		0x0C
- #define R_RX_ADDR_P2_LEN 1
+#define R_RX_ADDR_P2_LEN 1
 #define R_RX_ADDR_P3		0x0D
- #define R_RX_ADDR_P3_LEN 1
+#define R_RX_ADDR_P3_LEN 1
 #define R_RX_ADDR_P4		0x0E
- #define R_RX_ADDR_P4_LEN 1
+#define R_RX_ADDR_P4_LEN 1
 #define R_RX_ADDR_P5		0x0F
- #define R_RX_ADDR_P5_LEN 1
+#define R_RX_ADDR_P5_LEN 1
 #define R_TX_ADDR		0x10
- #define R_TX_ADDR_LEN 5
+#define R_TX_ADDR_LEN 5
 #define R_RX_PW_P0		0x11
 #define R_RX_PW_P1		0x12
 #define R_RX_PW_P2		0x13
@@ -115,13 +115,13 @@
 /* config structure */
 
 struct NRF_CFG {
-    uint8_t channel;
-    uint8_t txmac[5];
-    uint8_t mac0[5];
-    uint8_t mac1[5];
-    uint8_t mac2345[4];
-    uint8_t nrmacs;
-    uint8_t maclen[5];
+	uint8_t channel;
+	uint8_t txmac[5];
+	uint8_t mac0[5];
+	uint8_t mac1[5];
+	uint8_t mac2345[4];
+	uint8_t nrmacs;
+	uint8_t maclen[5];
 };
 
 typedef struct NRF_CFG * nrfconfig;
@@ -129,12 +129,12 @@ typedef struct NRF_CFG * nrfconfig;
 
 /* exported functions */
 #define nrf_rcv_pkt_time(maxtime, maxsize, pkt) \
-    nrf_rcv_pkt_time_encr(maxtime, maxsize, pkt, NULL)
+	nrf_rcv_pkt_time_encr(maxtime, maxsize, pkt, NULL)
 
 int nrf_rcv_pkt_time_encr(int maxtime, int maxsize, uint8_t * pkt, uint32_t const k[4]);
 
 #define nrf_snd_pkt_crc(size, pkt) \
-    nrf_snd_pkt_crc_encr(size, pkt, NULL)
+	nrf_snd_pkt_crc_encr(size, pkt, NULL)
 char nrf_snd_pkt_crc_encr(int size, uint8_t * pkt, uint32_t const k[4]);
 
 void nrf_init() ;

@@ -63,31 +63,28 @@ int main(void)
 		}
 	}
 
-	//ce
-	LPC_GPIO2->FIODIR |= (1<<2);
-	//cs_rad
-	LPC_GPIO2->FIODIR |= (1<<6);
-
 //	nrf_init();
 //	nrf_config_set(&config);
 
 
 	tetris_load();
-		nrf_init();
-		delay_ms(100);
+	nrf_init();
+	delay_ms(100);
+	
 	struct NRF_CFG config = {
     	.channel= CHANNEL,
 	    .txmac= MAC,
 	    .nrmacs=1,
-	    .mac0=  MAC,
-	    .maclen ="\x20",
+		.mac0=  MAC,
+		.maclen ="\x20",
 	};
-		nrf_config_set(&config);
-		delay_ms(50);
+
+	nrf_config_set(&config);
+	delay_ms(50);
 
 
-		uint8_t serialmsg_message[32] = { 0x20,0x47,0x41,0x00,0x00,0x00,0x00,0x05,0x00,0x00,0x00,0xfc,0x07,0x36,0xc6,0x47,0x53,0x6e,0x07,0x00,0x05,0x10,0x54,0x65,0x74,0x72,0x69,0x73,0x56,0x49,0x61,0x2f };
-		delay_ms(50);
+	uint8_t serialmsg_message[32] = { 0x20,0x47,0x41,0x00,0x00,0x00,0x00,0x05,0x00,0x00,0x00,0xfc,0x07,0x36,0xc6,0x47,0x53,0x6e,0x07,0x00,0x05,0x10,0x54,0x65,0x74,0x72,0x69,0x73,0x56,0x49,0x61,0x2f };
+	delay_ms(50);
 
 	while(1)
 	{
@@ -97,21 +94,21 @@ int main(void)
 		snd_pkt_no_crc(32, serialmsg_message);
 		nrf_rcv_pkt_start();
 
-//		delay_ms(500);
+		//		delay_ms(500);
 
 		timeout_ms = 20;
 
 		tetris_update();
-	    
-		
+
+
 		int len;
-        uint8_t buf[32];
-        len=nrf_rcv_pkt_poll(sizeof(buf),buf);
-        if( len > 0 ){
-//            puts("\\1");
-//            dump_encoded(len, buf);
-//            puts("\\0");
-        }	
+		uint8_t buf[32];
+		len=nrf_rcv_pkt_poll(sizeof(buf),buf);
+		if( len > 0 ){
+			//            puts("\\1");
+			//            dump_encoded(len, buf);
+			//            puts("\\0");
+		}	
 
 
 
@@ -132,9 +129,9 @@ void pixel(int x, int y, unsigned char color)
 		return;
 	}
 
-	
+
 	uint8_t col2 = 0;
-	
+
 	if(color > 2)
 	{
 		col2 = 1;
@@ -142,31 +139,31 @@ void pixel(int x, int y, unsigned char color)
 
 	lcd_plot (x, y, col2);
 	buffer[x][y] = color;
-	
+
 
 }
-        
+
 // found it in the internet...
 static unsigned int my_rand(void) {
-    static unsigned int z1 = 12345, z2 = 12345, z3 = 12345, z4 = 12345;
-    unsigned int b;
-    b  = ((z1 << 6) ^ z1) >> 13;
-    z1 = ((z1 & 4294967294U) << 18) ^ b;
-    b  = ((z2 << 2) ^ z2) >> 27;
-    z2 = ((z2 & 4294967288U) << 2) ^ b;
-    b  = ((z3 << 13) ^ z3) >> 21;
-    z3 = ((z3 & 4294967280U) << 7) ^ b;
-    b  = ((z4 << 3) ^ z4) >> 12;
-    z4 = ((z4 & 4294967168U) << 13) ^ b;
-    return (z1 ^ z2 ^ z3 ^ z4);
+	static unsigned int z1 = 12345, z2 = 12345, z3 = 12345, z4 = 12345;
+	unsigned int b;
+	b  = ((z1 << 6) ^ z1) >> 13;
+	z1 = ((z1 & 4294967294U) << 18) ^ b;
+	b  = ((z2 << 2) ^ z2) >> 27;
+	z2 = ((z2 & 4294967288U) << 2) ^ b;
+	b  = ((z3 << 13) ^ z3) >> 21;
+	z3 = ((z3 & 4294967280U) << 7) ^ b;
+	b  = ((z4 << 3) ^ z4) >> 12;
+	z4 = ((z4 & 4294967168U) << 13) ^ b;
+	return (z1 ^ z2 ^ z3 ^ z4);
 }
 
 unsigned int rand_int(unsigned int limit) {
-    return my_rand() % limit;
+	return my_rand() % limit;
 }
 
 int is_occupied(unsigned int nr) {
-    return 0;
+	return 0;
 }
 void push_lines(unsigned int nr, unsigned int lines)
 {
