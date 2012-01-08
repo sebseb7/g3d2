@@ -103,22 +103,23 @@ void nrf_config_set(nrfconfig config){
         }else if(i==1){
             nrf_write_reg_long(R_RX_ADDR_P1,5,config->mac1);
         }else if(i>1){
-            nrf_write_reg_long(R_RX_ADDR_P0+i,1,config->mac2345+i-2);
-        };
-    };
+			nrf_write_reg_long(R_RX_ADDR_P0+i,1,config->mac2345+i-2);
+		};
+	};
 
-    nrf_write_reg_long(R_TX_ADDR,5,config->txmac);
+	nrf_write_reg_long(R_TX_ADDR,5,config->txmac);
 
-    nrf_write_reg(R_EN_RXADDR,(1<<config->nrmacs)-1);
+	nrf_write_reg(R_EN_RXADDR,(1<<config->nrmacs)-1);
+};
+
+void nrf_set_strength(unsigned char strength){
+	if(strength>3)
+		strength=3;
+	nrf_write_reg(R_RF_SETUP,DEFAULT_SPEED|(strength<<1));
 };
 
 
-
 void nrf_init() {
-    // Enable SPI correctly
-	//    sspInit(0, sspClockPolarity_Low, sspClockPhase_RisingEdge);
-	// pullup ??
-
 	//ce
 	LPC_GPIO2->FIODIR |= (1<<2);
 	//cs_rad
