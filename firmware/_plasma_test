@@ -8,7 +8,7 @@ use strict;
 my $hostname = `hostname`;
 chomp $hostname;
 
-my $port = "/dev/cu.usbserial-A100DDXN";
+my $port = "/dev/cu.usbserial-A100DDXG";
 if($hostname eq 'lennyvm')
 {
     $port = '/dev/ttyUSB0';
@@ -54,7 +54,7 @@ warn $z1;
 		foreach my $x (0..31)
 		{
 
-			my $num =  sin($x/4+sin($z*3)*9) + sin($z1*sin($x/3)*0.14) + sin($z1*2)
+			my $num =  sin($x/4+sin($z*3)*9) + sin($z1*sin($x/3)*10)*.1 + sin($z1*2)
 			
 			+ sin(($y+$z1)/6+sin($z*10)*3);
 
