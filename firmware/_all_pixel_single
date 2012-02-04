@@ -3,14 +3,15 @@
 use Device::SerialPort;
 use Time::HiRes qw(usleep time);
 
-my $port = Device::SerialPort->new("/dev/ttyUSB0");
+my $port = Device::SerialPort->new("/dev/ttyUSB1");
 $port->databits(8);
 $port->baudrate(500000);
 $port->parity("none");
 $port->stopbits(1);
 
 
-my @steps  = (3,4,5,6,7,8,9,10,11,12,13,14,15,14,13,12,11,10,9,8,7,6,5,4);
+my @steps  = (0);
+#my @steps  = (3,4,5,6,7,8,9,10,11,12,13,14,15,14,13,12,11,10,9,8,7,6,5,4);
 
 while(1)
 {

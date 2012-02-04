@@ -13,10 +13,10 @@ use Data::Dumper;
 
 $0='g3d2-server';
 
-#close STDERR;
-#close STDOUT;
-#open STDOUT,'>>logfile2.txt';
-#open STDERR,'>&STDOUT';
+close STDERR;
+close STDOUT;
+open STDOUT,'>>logfile2.txt';
+open STDERR,'>&STDOUT';
 
 
 #02471ff

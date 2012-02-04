@@ -1,8 +1,14 @@
+#ifndef F_CPU
+#define __OPTIMIZE__
+#define F_CPU 20000000
+#define __AVR_ATmega88PA__
+#endif
 #include <inttypes.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
 #include <stdlib.h>
+
 
 #include "main.h"
 #include "pins.h"
@@ -21,6 +27,10 @@
 
 
 typedef void (*AppPtr_t)(void) __attribute__ ((noreturn)); 
+#ifndef ADDR
+#define ADDR 199
+//#warning ADDR not defined in Makefile
+#endif
 
 uint8_t addr = ADDR;
 

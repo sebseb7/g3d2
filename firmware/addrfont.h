@@ -75,26 +75,8 @@ uint8_t addrfont[] = {119,17,119,17,119};
 uint8_t addrfont[] = {117,21,119,17,113};
 #elif ADDR_135
 uint8_t addrfont[] = {119,20,119,17,119};
-#elif ADDR_136
-uint8_t addrfont[] = {119,20,119,21,119};
-#elif ADDR_137
-uint8_t addrfont[] = {119,17,115,17,113};
-#elif ADDR_138
-uint8_t addrfont[] = {119,21,119,21,119};
-#elif ADDR_139
-uint8_t addrfont[] = {119,21,119,17,119};
-#elif ADDR_140
-uint8_t addrfont[] = {87,85,117,21,23};
-#elif ADDR_141
-uint8_t addrfont[] = {81,81,113,17,17};
-#elif ADDR_142
-uint8_t addrfont[] = {87,81,119,20,23};
-#elif ADDR_143
-uint8_t addrfont[] = {87,81,119,17,23};
-#elif ADDR_144
-uint8_t addrfont[] = {85,85,119,17,17};
-#elif ADDR_145
-uint8_t addrfont[] = {87,84,119,17,23};
+#else
+uint8_t addrfont[] = {119,85,119,17,119};
 #endif
 
 

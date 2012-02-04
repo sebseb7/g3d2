@@ -30,11 +30,15 @@ LDFLAGS = -mcpu=cortex-m3 -mthumb -O$(OPTIMIZATION) -nostartfiles  -T$(LSCRIPT)
 ASFLAGS = -mcpu=cortex-m3 --defsym RAM_MODE=0
 
 #  Compiler/Assembler Paths
-GCC = arm-none-eabi-gcc
-AS = arm-none-eabi-as
-OBJCOPY = arm-none-eabi-objcopy
+#GCC = arm-none-eabi-gcc
+GCC = gcc
+#AS = arm-none-eabi-as
+AS = as
+#OBJCOPY = arm-none-eabi-objcopy
+OBJCOPY = objcopy
 REMOVE = rm -f
-SIZE = arm-none-eabi-size
+#SIZE = arm-none-eabi-size
+SIZE = size
 
 #########################################################################
 

@@ -20,12 +20,14 @@ print outfile "#ifdef ADDR_0\n";
 print_char(0);
 
 
-foreach my $char (0..45)
+foreach my $char (0..35)
 {
 	print outfile "#elif ADDR_".($char+100)."\n";
 	print_char($char);
 }
 
+print outfile "#else\n";
+print_char(99);
 
 
 print outfile "#endif\n\n\n";

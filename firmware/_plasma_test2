@@ -9,9 +9,9 @@ my $hostname = `hostname`;
 chomp $hostname;
 
 my $port = "/dev/cu.usbserial-A2002QDi";
-if($hostname eq 'lennyvm')
+if($hostname eq 'ernie')
 {
-    $port = '/dev/ttyUSB0';
+    $port = '/dev/ttyUSB1';
 }
     
     
@@ -27,27 +27,30 @@ $port->stopbits(1);
 my $z = 0;
 my $z1 = 0;
 
-my @pixbuf;
-foreach my $i (0..2303)
-{
-    $pixbuf[$i]=0;
-}
+my $pixbuf;
+#foreach my $i (0..2303)
+#{
+#    $pixbuf[$i]=0;
+#}
 
-my $sleeptime = 23500;
+my $sleeptime = 21500;
 
 my $z2=0;
 my $z3=0;
 my $z4=0;
 
 my $frame=0;
+
+my %xpos1;
+my %xycache;
+
+
+my %frame_cache;
+
 while(1)
 {
-	$z+= ((1-sin($z1))/60);
-	$z1+=.1;
-	$z2+=.13;
-	$z3++;
-	$z4++;
-	$port->write(chr(103));
+	$z2+=.25;
+	$z2 =0 if $z2 == 76;
 	my $time1 = time;
  
 
@@ -55,19 +58,27 @@ while(1)
 	my $mod = 0;
 
 
+
+
 	
+	if(! exists $frame_cache{$z2})
+	{
+	
+	my $zfac = sin($z2/6);
+	my $z1fac = sin($z2/12);
+
+
+#	warn $zfac.' '.$z2;
+
 	foreach my $x (0..31)
 	{
-		my $xpos = ((($x-$x%8)/8) * 576)+($x%8);
 		
-		my $xfac = sin($z1)*2*sin($x/8);
+		my $xfac = $z1fac*sin($x/8);
 		
 		foreach my $y (0..71)
 		{
-			my $num = $xfac + 2*sin($y/8)*sin($z2);
-			
-			
-		
+			my $num = $xfac + sin($y/3) * sin($zfac);
+
 			$num = int $num*16+16;
 
 		
@@ -75,34 +86,47 @@ while(1)
 			{
 				$num = 31-$num;
 			}
-
 			$num=1 if $num<1;
 			
 
 
-			$pixbuf[($y*8+$xpos)]=$num;
+			$pixbuf->{$y}{$x}=$num;
 			
 		}
 	}
 
 
-	my $pixel = 0;
-	foreach my $mod (1..36)
-	{
-		my $str;
-		foreach my $pix (1..32)
-		{
-			$str.=chr($pixbuf[$pixel]+$pixbuf[$pixel+1]*16);
-			$pixel++;
-			$pixel++;
-		}
-		$port->write(esc($str));
-	}
+	my $str;
 
-	usleep($sleeptime);
-	
-	
-	
+	my $x = 0;
+	my $y = 0;
+	my $mod_row=0;
+	foreach my $i (0..1151)
+	{
+		$str.=chr($pixbuf->{$x}{$y+$mod_row}+$pixbuf->{$x}{$y+$mod_row+1}*16);
+
+		$y+=2;
+		
+		if($y == 8)
+		{
+			$x++;
+			$y=0;
+			if($x==72)
+			{
+				$x=0;
+				$mod_row+=8;
+			}
+		}
+	}
+		$frame_cache{$z2}=esc($str);
+#		warn "prerender frame $z2";
+	}
+	{
+		$port->write(chr(103));
+		$port->write($frame_cache{$z2});
+
+	usleep($sleeptime) if $sleeptime > 0;
+
 	my $fps = 1 / (time - $time1);
 
 	$frame++;
@@ -114,6 +138,9 @@ while(1)
 	
 	$sleeptime+=100 if$fps > 40;
 	$sleeptime-=100 if$fps < 40;
+
+	}
+
 }
 
 $port->close();
@@ -132,4 +159,5 @@ sub esc($)
                                                             
 	return $data;
 }
+
 

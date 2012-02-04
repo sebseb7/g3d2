@@ -7,7 +7,7 @@ use strict;
 #cu.usbmodem3a21         cu.usbmodem5a11         cu.usbmodem5a21         cu.usbmodem5d11
 
 
-my $port3 = Device::SerialPort->new("/dev/cu.usbmodem5d11");
+my $port3 = Device::SerialPort->new("/dev/cu.usbmodem411");
 $port3->databits(8);
 $port3->baudrate(115200);
 $port3->parity("none");
