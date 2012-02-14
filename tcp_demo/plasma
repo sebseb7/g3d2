@@ -1,0 +1,48 @@
+#!/usr/bin/perl
+
+
+use strict;
+use g3d2;
+use Time::HiRes qw(usleep time);
+
+
+g3d2::init();
+
+
+my @frame;
+
+foreach my $x (0..2303)
+{
+	$frame[$x] = 1;
+}
+
+
+my $count = 0;
+my $count2 = 0;
+while(1)
+{
+	$count+= 0.001;
+	$count2 += 0.1;
+	my $start = time;
+	foreach my $y (0..31)
+	{
+		foreach my $x (0..71)
+		{
+		
+			my $value = (sin($x/(sin(1)+1)+(sin($count2)*10))+1)*164;
+			$value +=  (sin($y/3+sin(sin($count*2)*2)*4)+1)*164;
+			$value = (sin(($value/80)+(sin($count)*60))+1)*67;
+
+			$value = int(($value+1)/8.5);
+
+			$value = 1 if $value == 0;
+			$frame[$x+($y*72)]=$value; 
+		}
+	}
+
+	g3d2::setFrame(\@frame);
+
+	warn (1 / (time-$start) );
+}
+
+
