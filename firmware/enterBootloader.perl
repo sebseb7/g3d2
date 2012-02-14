@@ -7,9 +7,9 @@ my $hostname = `hostname`;
 chomp $hostname;
 
 my $port = "/dev/cu.usbserial-A100DDXG";
-if($hostname eq 'lennyvm')
+if($hostname eq 'ernie')
 {
-	$port = '/dev/ttyUSB0';
+	$port = '/dev/ttyUSB1';
 }
 
 my $port = Device::SerialPort->new($port);

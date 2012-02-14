@@ -46,7 +46,7 @@ while(1)
 
 	warn 'announce';
 	#set channel to 81
-	$port->write(cmd(5).chr(81).cmd(0));
+	$port->write(cmd(5).chr(87).cmd(0));
 	
 	
 	#anounce game
@@ -150,7 +150,9 @@ sub process()
 
 #	warn 'READ:'.$data if $len;
 
-	if($len)
+	warn $packetdata if $packetdata;
+	
+	while($packetdata =~ s/\\2\\0//)
 	{
 #		warn $len;
 		warn 'data'.$data;

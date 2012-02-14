@@ -24,135 +24,32 @@ int main(int argc,char** argv)
         tio.c_cc[VMIN]=1;
         tio.c_cc[VTIME]=5;
  
-        tty_fd=open("/dev/ttyUSB0", O_RDWR | O_NONBLOCK);      
+        tty_fd=open("/dev/ttyACM1", O_RDWR | O_NONBLOCK);      
         cfsetospeed(&tio,B500000);            // 115200 baud
         cfsetispeed(&tio,B500000);            // 115200 baud
  
         tcsetattr(tty_fd,TCSANOW,&tio);
-//                if (read(tty_fd,&c,1)>0)        write(STDOUT_FILENO,&c,1);              // if new data is available on the serial port, print it out
-//                if (read(STDIN_FILENO,&c,1)>0)  write(tty_fd,&c,1);                     // if new data is available on the console, send it to the serial port
+
+		char cmd1[] = {92,54,32,92,48}; 
+		write(tty_fd,&cmd1,5);
 
 
-    for(int y = 0 ; y < 32; y++)
-	{
-		for(int x = 0; x < 72;x++)
+		char cmd2[] = {92,52,85,195,210,40,195,92,48}; 
+		write(tty_fd,&cmd2,9);
+
+		char cmd3[] = {92,51,82,69,77,48,84,92,48}; 
+		write(tty_fd,&cmd3,9);
+
+		char cmd4[] = {92,53,81,92,48}; 
+		write(tty_fd,&cmd4,5);
+
+
+		while(1)
 		{
-			pixel(x,y,0);
+
+
+			char cmd5[] = {92,49,32,71,65,0,0,0,0,1,0,0,0,85,195,210,40,195,83,195,210,0,6,16,116,101,116,114,105,86,73,201,233,92,48}; 
+			write(tty_fd,&cmd5,36);
+			usleep(1000000);
 		}
-	}
-
-
-	while(1)
-	{
-		for(int x = 0; x < 72;x++)
-		{
-	    	for(int y = 0 ; y < 32; y++)
-			{
-				pixel(x,y,15);
-				usleep(8000);
-				pixel(x,y,0);
-			}
-		}
-
-	    for(int y = 0 ; y < 32; y++)
-		{
-			for(int x = 0; x < 72;x++)
-			{
-				pixel(x,y,15);
-				usleep(8000);
-				pixel(x,y,0);
-			}
-		}
-
-		for(int x = 0; x < 72;x++)
-		{
-	    	for(int y = 0 ; y < 32; y++)
-			{
-				pixel(x,y,5);
-				usleep(8000);
-			}
-		}
-
-	    for(int y = 0 ; y < 32; y++)
-		{
-			for(int x = 0; x < 72;x++)
-			{
-				pixel(x,y,0);
-				usleep(8000);
-			}
-		}
-
-	    for(int y = 0 ; y < 32; y++)
-		{
-			for(int x = 0; x < 72;x++)
-			{
-				pixel(x,y,5);
-				usleep(8000);
-			}
-		}
-		for(int x = 0; x < 72;x++)
-		{
-	    	for(int y = 0 ; y < 32; y++)
-			{
-				pixel(x,y,0);
-				usleep(8000);
-			}
-		}
-	}
-
-                                                            
-
- 
-	close(tty_fd);
-}
-
-
-void pixel(int x, int y, unsigned char color) 
-{
-
-			y = 31-y;
-
-			unsigned char c=104;
-			write(tty_fd,&c,1);
-
-
-//			UART0_Sendchar(104);
-			
-			int x2 = x % 8;
-			int y2 = y % 8;
-			int mod = (x-x2)/8 + ((y-y2)/8*9);
-			
-//			UART0_Sendchar(mod);
-			c=mod;
-			write(tty_fd,&c,1);
-//			UART0_Sendchar(x2);
-			c=x2;
-			write(tty_fd,&c,1);
-//			UART0_Sendchar(y2);
-			c=y2;
-			write(tty_fd,&c,1);
-//			UART0_Sendchar(color);
-			c=color;
-			write(tty_fd,&c,1);
-			usleep(200);
-
-}
-        
-// found it in the internet...
-static unsigned int my_rand(void) {
-    static unsigned int z1 = 12345, z2 = 12345, z3 = 12345, z4 = 12345;
-    unsigned int b;
-    b  = ((z1 << 6) ^ z1) >> 13;
-    z1 = ((z1 & 4294967294U) << 18) ^ b;
-    b  = ((z2 << 2) ^ z2) >> 27;
-    z2 = ((z2 & 4294967288U) << 2) ^ b;
-    b  = ((z3 << 13) ^ z3) >> 21;
-    z3 = ((z3 & 4294967280U) << 7) ^ b;
-    b  = ((z4 << 3) ^ z4) >> 12;
-    z4 = ((z4 & 4294967168U) << 13) ^ b;
-    return (z1 ^ z2 ^ z3 ^ z4);
-}
-
-unsigned int rand_int(unsigned int limit) {
-    return my_rand() % limit;
 }
