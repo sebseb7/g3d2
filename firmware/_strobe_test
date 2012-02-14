@@ -8,7 +8,7 @@ use strict;
 my $hostname = `hostname`;
 chomp $hostname;
 
-my $port = "/dev/cu.usbserial-A2002QDi";
+my $port = "/dev/cu.usbserial-A100DDXG";
 if($hostname eq 'lennyvm')
 {
     $port = '/dev/ttyUSB0';
