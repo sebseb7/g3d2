@@ -8,10 +8,10 @@ use strict;
 my $hostname = `hostname`;
 chomp $hostname;
 
-my $port = "/dev/cu.usbserial-A2002QDi";
-if($hostname eq 'lennyvm')
+my $port = "/dev/cu.usbserial-A100DDXG";
+if($hostname eq 'ernie')
 {
-    $port = '/dev/ttyUSB0';
+    $port = '/dev/ttyUSB1';
 }
     
     

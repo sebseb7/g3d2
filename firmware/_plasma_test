@@ -8,10 +8,10 @@ use strict;
 my $hostname = `hostname`;
 chomp $hostname;
 
-my $port = "/dev/cu.usbserial-A100DDXN";
-if($hostname eq 'lennyvm')
+my $port = "/dev/cu.usbserial-A100DDXG";
+if($hostname eq 'ernie')
 {
-    $port = '/dev/ttyUSB0';
+    $port = '/dev/ttyUSB1';
 }
     
     
@@ -35,7 +35,9 @@ foreach my $i (0..2303)
 
 
 
-while(1)
+
+my %frame_cache;
+foreach my $fr (0..1000)
 {
 	$z+= ((1-sin($z1))/90);
 	$z1+=0.10105;
@@ -54,9 +56,9 @@ warn $z1;
 		foreach my $x (0..31)
 		{
 
-			my $num =  sin($x/4+sin($z*3)*9) + sin($z1*sin($x/3)*0.14) + sin($z1*2)
+			my $num =  sin(($x/4*abs(sin($x/18)))+sin($z*3)*9) + sin($z1*sin($x/3)*10)*.1 + sin($z1*2)
 			
-			+ sin(($y+$z1)/6+sin($z*10)*3);
+			+ sin((($y+$z1)/6+sin($z*10)*3)*abs(sin($y/6+$z)/4));
 
 
 			$num = int(abs $num*9)%32;
@@ -80,18 +82,37 @@ warn $z1;
 		my $str;
 		foreach my $pix (1..32)
 		{
-			$str.=chr($pixbuf[$pixel]+$pixbuf[$pixel]*16);
+			$str.=chr($pixbuf[$pixel]+$pixbuf[$pixel+1]*16);
 			$pixel++;
 			$pixel++;
 		}
-		$port->write(&esc($str));
+		$frame_cache{$fr}.= esc($str);
+
+		
 	}
+	$port->write(chr(103));
+	usleep(24000);
+	$port->write($frame_cache{$fr});
+
+	warn $fr;
 
 #	usleep(17000);
 
-	warn 1 / (time - $time1);
 }
+while(1)
+{
+foreach my $fr (0..1000)
+{
+	my $time1 = time;
 
+	$port->write(chr(103).$frame_cache{$fr});
+
+	usleep(24000);
+
+	warn 1 / (time - $time1);
+
+}
+}
 $port->close();
 
 

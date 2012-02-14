@@ -1,0 +1,38 @@
+#!/usr/bin/perl
+
+
+use strict;
+use g3d2;
+use Time::HiRes qw(usleep time);
+
+
+g3d2::init();
+
+
+my @frame;
+
+foreach my $x (0..2303)
+{
+	$frame[$x] = 1;
+}
+
+
+my $start = time;
+my $frame = 0;
+foreach my $pix (0..2304)
+{
+	$start = time;
+	$frame = 0;
+	$frame[$pix] = 15;
+
+	g3d2::setFrame(\@frame);
+
+	$frame++;
+	warn ($frame / (time-$start) );
+	warn time-$start;
+}
+
+
+while(1)
+{
+};

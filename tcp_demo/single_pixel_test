@@ -1,0 +1,19 @@
+#!/usr/bin/perl
+
+
+use strict;
+use g3d2;
+use Time::HiRes qw(usleep time);
+
+
+g3d2::init();
+
+foreach my $y (0..31)
+{
+	foreach my $x (0..71)
+	{
+		g3d2::setPixel($x,$y,14);
+	}
+}
+
+while(1){};

@@ -1,0 +1,25 @@
+#!/usr/bin/perl
+
+
+use strict;
+use g3d2;
+use Time::HiRes qw(usleep time);
+
+
+g3d2::init();
+
+
+
+foreach my $pix (0..2304)
+{
+	my $start = time;
+
+	g3d2::setAll(0);
+	usleep(28000);
+	g3d2::setAll(15);
+	usleep(28000);
+
+	warn (2 / (time-$start) );
+}
+
+
