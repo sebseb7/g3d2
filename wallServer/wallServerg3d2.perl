@@ -307,9 +307,9 @@ sub handlerequest($$$$)
 	elsif($data =~ /^02(..)(..)(.)$/)
 	{
 		my $x = hex($1);
-		my $y = hex($2);
+		my $y = ($wallHeight-1)-hex($2);
 		my $green_h = $3;
-		warn $green_h;
+#		warn $green_h;
 		my $green = hex($3);
 		warn $data && return 'bad'."\r\n" if $x > $wallWidth;
 		warn $data && return 'bad'."\r\n" if $y > $wallHeight;
@@ -542,14 +542,14 @@ sub setModulePixel($$$$)
 		eval
 		{
 
-			warn 'pixel write';
+#			warn 'pixel write';
 			my $bytes;
 			eval
 			{
 				if($serial)
 				{
 					$bytes = $serial->write(chr(0x68).escape(chr($module).chr($x).chr($y).chr($green)));
-					warn $bytes;
+#					warn $bytes;
 				}
 			};
 			warn localtime(time).' connection error '.$@ if $@;
@@ -575,9 +575,9 @@ sub escape($)
 	my $data = shift;
 	
 	
+	$data =~ s/\x65/\x65\x3/go;
 	$data =~ s/\x67/\x65\x1/go;
 	$data =~ s/\x68/\x65\x2/go;
-	$data =~ s/\x65/\x65\x3/go;
 	$data =~ s/\x66/\x65\x4/go;
 	
 	return $data;
@@ -587,13 +587,33 @@ sub setFrame($)
 {
 	return if $noHardware;
 
-	warn 'setFrame';
+#	warn 'setFrame';
 	
-	my $frame=shift;
+	my $frame_in=shift;
+	my $frame = '0' x ($wallWidth*$wallHeight);
 
 	$serial->write(chr(0x67));#
 
 	my $ppp = $wallWidth*$wallSubpixel;
+
+
+	foreach my $row_y (0..3)
+	{
+		foreach my $mod_x (0..7)
+		{
+			foreach my $row_x (0..8)
+			{
+				foreach my $mod_y (0..7)
+				{
+					substr($frame,($mod_y*8)+($row_x*64)+(7-$mod_x)+((3-$row_y)*576),1,
+						substr($frame_in,$mod_y+($row_x*8)+($mod_x*72)+($row_y*576),1)
+					);
+				}
+			}
+		}
+	}
+
+
 
 	for(0..((($wallWidth*$wallSubpixel*$wallHeight)/$ppp) - 1))
 	{
