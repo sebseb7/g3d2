@@ -62,6 +62,7 @@ sub setFrame($)
 			
 			print $socket $data;
 
+			#implement flowcontrol	
 			usleep(700);
 
 	}
