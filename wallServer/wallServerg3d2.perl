@@ -32,6 +32,7 @@ my $currentPrio = 0;
 my $isRecording = 0;
 my $recordPath = '/opt/wallRecords_g3d2/';
 my $currentRecordingFile;
+my $currentRecordingTime;
 
 my $frameBuffer={};  			#one buffer for each prioLevel
 my %activePrios;				#show which connections is on with level
@@ -287,7 +288,7 @@ sub handlerequest($$$$)
 		if(($isRecording)and($myPrio == $currentPrio))
 		{
 
-			if((time-$currentRecordingFile) > 60*5)
+			if((time-$currentRecordingTime) > 60*5)
 			{
 				warn localtime(time).' autostop';
 				$isRecording=0;
@@ -295,7 +296,7 @@ sub handlerequest($$$$)
 			else
 			{
 				open outfile,'>>'.$recordPath.$currentRecordingFile.'.rec';
-				print outfile int((time-$currentRecordingFile)*1000).' ';
+				print outfile int((time-$currentRecordingTime)*1000).' ';
 				print outfile $data."\r\n";
 				close outfile;
 			}
@@ -328,7 +329,7 @@ sub handlerequest($$$$)
 		if(($isRecording)and($myPrio == $currentPrio))
 		{
 
-			if((time-$currentRecordingFile) > 60*5)
+			if((time-$currentRecordingTime) > 60*5)
 			{
 				warn localtime(time).' autostop';
 				$isRecording=0;
@@ -336,7 +337,7 @@ sub handlerequest($$$$)
 			else
 			{
 				open outfile,'>>'.$recordPath.$currentRecordingFile.'.rec';
-				print outfile int((time-$currentRecordingFile)*1000).' ';
+				print outfile int((time-$currentRecordingTime)*1000).' ';
 				print outfile $data."\r\n";
 				close outfile;
 			}
@@ -365,7 +366,7 @@ sub handlerequest($$$$)
 		if(($isRecording)and($myPrio == $currentPrio))
 		{
 			
-			if((time-$currentRecordingFile) > 60*5)
+			if((time-$currentRecordingTime) > 60*5)
 			{
 				warn localtime(time).' autostop';
 				$isRecording=0;
@@ -373,7 +374,7 @@ sub handlerequest($$$$)
 			else
 			{
 				open outfile,'>>'.$recordPath.$currentRecordingFile.'.rec';
-				print outfile int((time-$currentRecordingFile)*1000).' ';
+				print outfile int((time-$currentRecordingTime)*1000).' ';
 				print outfile $data."\r\n";
 				close outfile;
 			}
@@ -400,11 +401,14 @@ sub handlerequest($$$$)
 		return 'ok'."\r\n";
 	}
 	#start recording
-	elsif($data =~ /^05$/)
+	elsif($data =~ /^05([0-9a-zA-Z]*)$/)
 	{
 		warn localtime(time).' start recording';
 		$isRecording = 1;
+		$currentRecordingTime = int time;
 		$currentRecordingFile = int time;
+		$currentRecordingFile = $1 if length($1);
+		
 		
 
 			open outfile,'>>'.$recordPath.$currentRecordingFile.'.rec';
@@ -416,11 +420,15 @@ sub handlerequest($$$$)
 	#stop recording
 	elsif($data =~ /^06$/)
 	{
-		open outfile,'>>'.$recordPath.$currentRecordingFile.'.rec';
-		print outfile int((time-$currentRecordingFile)*1000).' ';
-		close outfile;
-		$isRecording = 0;
-		return $currentRecordingFile."\r\n";
+		if($isRecording)
+		{
+			open outfile,'>>'.$recordPath.$currentRecordingFile.'.rec';
+			print outfile int((time-$currentRecordingTime)*1000).' ';
+			close outfile;
+			$isRecording = 0;
+			return $currentRecordingFile."\r\n";
+		}
+		return "bad\r\n";
 	}
 	# play recorded file
 	elsif($data =~ /^07(\d+)$/)
