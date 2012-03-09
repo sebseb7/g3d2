@@ -72,9 +72,9 @@ int main(void)
 	delay_ms(100);
 	
 	struct NRF_CFG config = {
-    	.channel= CHANNEL,
-	    .txmac= MAC,
-	    .nrmacs=1,
+		.channel= CHANNEL,
+		.txmac= MAC,
+		.nrmacs=1,
 		.mac0=  MAC,
 		.maclen ="\x20",
 	};
