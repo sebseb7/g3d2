@@ -3,7 +3,7 @@
 package g3d2;
 
 use strict;
-use IO::Socket::INET6;
+use IO::Socket::INET;
 use Time::HiRes qw(usleep);
 
 my $socket;
@@ -11,7 +11,7 @@ my $window = 3;
 
 sub init()
 {
-	$socket = IO::Socket::INET6->new(PeerAddr => 'g3d2',
+	$socket = IO::Socket::INET->new(PeerAddr => 'g3d2',
 									PeerPort => 1339,
 									Proto    => "tcp",
 									Type     => SOCK_STREAM)     or die "Couldn't connect : $@\n";
