@@ -3,7 +3,7 @@
 package g3d2;
 
 use strict;
-use IO::Socket::INET;
+use IO::Socket;
 use Time::HiRes qw(usleep);
 
 my $socket;

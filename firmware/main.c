@@ -210,8 +210,11 @@ int main(void)
     uint8_t pixel_x = 0;
     uint8_t pixel_y = 0;
 
-	uint8_t pixel_state = 0;
-	uint8_t mod_state = 0;
+	uint8_t state_pixel_x = 0;
+	uint8_t state_mod_x = 0;
+	uint8_t state_pixel_y = 0;
+	uint8_t state_mod_y = 0;
+
 
 
 	while(1)
@@ -230,8 +233,10 @@ int main(void)
 					// full frame
 					state = 2;
 	
-					mod_state = 0;
-					pixel_state = 0;
+					state_mod_x = 0;
+					state_pixel_x = 0;
+					state_pixel_y = 0;
+					state_mod_y= 3*9;
 					continue;
 				case  0x65:
 					escape = 1;
@@ -289,39 +294,52 @@ int main(void)
 			else if(state == 2)
 			{
 
-				if(mod_state == addr2)
+				if(state_mod_x+state_mod_y == addr2)
 				{
-					frame_buffer[pixel_state] = data;
+					frame_buffer[state_pixel_x+(state_pixel_y*4)] = data;
 				}
 
-				pixel_state++;
-
-				if(pixel_state == 32)
+				state_pixel_x++;
+				
+				if(state_pixel_x==4)
 				{
-					pixel_state = 0;
-					mod_state++;
-				}
-				if((mod_state == 36)&&(pixel_state==0))
-				{
-					uint8_t ps2 =0;
-					for(uint8_t x = 0;x<8;x++)
+					state_pixel_x = 0;
+					state_mod_x++;
+					if(state_mod_x == 9)
 					{
-						for(uint8_t y = 0;y<4;y++)
+						state_mod_x = 0;
+						state_pixel_y++;
+						if(state_pixel_y == 8)
 						{
-							setLedXY(7-x,y*2,(frame_buffer[ps2] & 0x0f));
-							setLedXY(7-x,y*2+1, ( (frame_buffer[ps2]&0xf0) >> 4 ) );
-							ps2++;
-
+							state_pixel_y=0;
+							state_mod_y-=9;
+							if(state_mod_y == 247)
+							{
+								uint8_t ps2 =0;
+								for(uint8_t x = 0;x<8;x++)
+								{
+									for(uint8_t y = 0;y<4;y++)
+									{
+										setLedXY(7-(y*2),7-x,(frame_buffer[ps2] & 0x0f));
+										setLedXY(7-(y*2+1),7-x, ( (frame_buffer[ps2]&0xf0) >> 4 ) );
+										ps2++;
+			
+									}
+								}
+							}
 						}
 					}
 				}
+
+
+
 			}
 			else if(state == 3)
 			{
 				if(data == 0xfd)
 				{
-                    UBRR0L = 0;
-                    UCSR0A &= ~(1 << U2X0);
+//                    UBRR0L = 0;
+//                    UCSR0A &= ~(1 << U2X0);
 				}
 				else if(data == 0xff)
 				{
@@ -348,9 +366,9 @@ int main(void)
 					//disable UART for a few seconds
 			        UCSR0B &= ~(1 << RXCIE0);
 				    UCSR0B &= ~(1 << RXEN0);
-#ifdef ADDR_100			        
+/*#ifdef ADDR_100			        
 		            UCSR0B &= ~(1 << TXEN0);
-#endif		            
+#endif		            */
 					setLedAll(10);
 					for(uint8_t x = 0;x < 8;x++)
 					{
@@ -366,9 +384,9 @@ int main(void)
 					setLedAll(0);
 				    UCSR0B |= (1 << RXEN0);
 			        UCSR0B |= (1 << RXCIE0);
-#ifdef ADDR_100			        
+/*#ifdef ADDR_100			        
 		            UCSR0B |= (1 << TXEN0);
-#endif		            
+#endif		            */
 				}
 				state = 0;
 			}

@@ -11,7 +11,7 @@ chomp $hostname;
 my $port = "/dev/cu.usbserial-A100DDXG";
 if($hostname eq 'ernie')
 {
-    $port = '/dev/ttyUSB1';
+    $port = '/dev/ttyUSB0';
 }
     
     
@@ -71,7 +71,8 @@ warn $z1;
 			$num=1 if $num<1;
 
 			$pixel++;
-			$pixbuf[($y*8+($x%8)+((($x-$x%8)/8) * 576))]=$num;
+			#$pixbuf[($y*8+($x%8)+((($x-$x%8)/8) * 576))]=$num;
+			$pixbuf[($x*72)+$y]=$num;
 			
 		}
 	}

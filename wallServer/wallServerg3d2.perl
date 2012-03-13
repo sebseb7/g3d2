@@ -32,6 +32,7 @@ my $currentPrio = 0;
 my $isRecording = 0;
 my $recordPath = '/opt/wallRecords_g3d2/';
 my $currentRecordingFile;
+my $currentRecordingTime;
 
 my $frameBuffer={};  			#one buffer for each prioLevel
 my %activePrios;				#show which connections is on with level
@@ -287,7 +288,7 @@ sub handlerequest($$$$)
 		if(($isRecording)and($myPrio == $currentPrio))
 		{
 
-			if((time-$currentRecordingFile) > 60*5)
+			if((time-$currentRecordingTime) > 60*5)
 			{
 				warn localtime(time).' autostop';
 				$isRecording=0;
@@ -295,7 +296,7 @@ sub handlerequest($$$$)
 			else
 			{
 				open outfile,'>>'.$recordPath.$currentRecordingFile.'.rec';
-				print outfile int((time-$currentRecordingFile)*1000).' ';
+				print outfile int((time-$currentRecordingTime)*1000).' ';
 				print outfile $data."\r\n";
 				close outfile;
 			}
@@ -307,9 +308,9 @@ sub handlerequest($$$$)
 	elsif($data =~ /^02(..)(..)(.)$/)
 	{
 		my $x = hex($1);
-		my $y = hex($2);
+		my $y = ($wallHeight-1)-hex($2);
 		my $green_h = $3;
-		warn $green_h;
+#		warn $green_h;
 		my $green = hex($3);
 		warn $data && return 'bad'."\r\n" if $x > $wallWidth;
 		warn $data && return 'bad'."\r\n" if $y > $wallHeight;
@@ -328,7 +329,7 @@ sub handlerequest($$$$)
 		if(($isRecording)and($myPrio == $currentPrio))
 		{
 
-			if((time-$currentRecordingFile) > 60*5)
+			if((time-$currentRecordingTime) > 60*5)
 			{
 				warn localtime(time).' autostop';
 				$isRecording=0;
@@ -336,7 +337,7 @@ sub handlerequest($$$$)
 			else
 			{
 				open outfile,'>>'.$recordPath.$currentRecordingFile.'.rec';
-				print outfile int((time-$currentRecordingFile)*1000).' ';
+				print outfile int((time-$currentRecordingTime)*1000).' ';
 				print outfile $data."\r\n";
 				close outfile;
 			}
@@ -365,7 +366,7 @@ sub handlerequest($$$$)
 		if(($isRecording)and($myPrio == $currentPrio))
 		{
 			
-			if((time-$currentRecordingFile) > 60*5)
+			if((time-$currentRecordingTime) > 60*5)
 			{
 				warn localtime(time).' autostop';
 				$isRecording=0;
@@ -373,7 +374,7 @@ sub handlerequest($$$$)
 			else
 			{
 				open outfile,'>>'.$recordPath.$currentRecordingFile.'.rec';
-				print outfile int((time-$currentRecordingFile)*1000).' ';
+				print outfile int((time-$currentRecordingTime)*1000).' ';
 				print outfile $data."\r\n";
 				close outfile;
 			}
@@ -400,11 +401,14 @@ sub handlerequest($$$$)
 		return 'ok'."\r\n";
 	}
 	#start recording
-	elsif($data =~ /^05$/)
+	elsif($data =~ /^05([0-9a-zA-Z]*)$/)
 	{
 		warn localtime(time).' start recording';
 		$isRecording = 1;
+		$currentRecordingTime = int time;
 		$currentRecordingFile = int time;
+		$currentRecordingFile = $1 if length($1);
+		
 		
 
 			open outfile,'>>'.$recordPath.$currentRecordingFile.'.rec';
@@ -416,11 +420,15 @@ sub handlerequest($$$$)
 	#stop recording
 	elsif($data =~ /^06$/)
 	{
-		open outfile,'>>'.$recordPath.$currentRecordingFile.'.rec';
-		print outfile int((time-$currentRecordingFile)*1000).' ';
-		close outfile;
-		$isRecording = 0;
-		return $currentRecordingFile."\r\n";
+		if($isRecording)
+		{
+			open outfile,'>>'.$recordPath.$currentRecordingFile.'.rec';
+			print outfile int((time-$currentRecordingTime)*1000).' ';
+			close outfile;
+			$isRecording = 0;
+			return $currentRecordingFile."\r\n";
+		}
+		return "bad\r\n";
 	}
 	# play recorded file
 	elsif($data =~ /^07(\d+)$/)
@@ -542,14 +550,14 @@ sub setModulePixel($$$$)
 		eval
 		{
 
-			warn 'pixel write';
+#			warn 'pixel write';
 			my $bytes;
 			eval
 			{
 				if($serial)
 				{
 					$bytes = $serial->write(chr(0x68).escape(chr($module).chr($x).chr($y).chr($green)));
-					warn $bytes;
+#					warn $bytes;
 				}
 			};
 			warn localtime(time).' connection error '.$@ if $@;
@@ -575,9 +583,9 @@ sub escape($)
 	my $data = shift;
 	
 	
+	$data =~ s/\x65/\x65\x3/go;
 	$data =~ s/\x67/\x65\x1/go;
 	$data =~ s/\x68/\x65\x2/go;
-	$data =~ s/\x65/\x65\x3/go;
 	$data =~ s/\x66/\x65\x4/go;
 	
 	return $data;
@@ -587,13 +595,47 @@ sub setFrame($)
 {
 	return if $noHardware;
 
-	warn 'setFrame';
+#	warn 'setFrame';
 	
 	my $frame=shift;
+	
+#	my $frame_in=shift;
+#	my $frame = '0' x ($wallWidth*$wallHeight);
 
 	$serial->write(chr(0x67));#
 
 	my $ppp = $wallWidth*$wallSubpixel;
+
+#	my $row_y_by_576 = 0;
+#	my $mod_x_by_72 = 0;
+#	my $row_x_by_64 = 0;
+#	my $row_x_by_8 = 0;
+#	foreach my $row_y (0..3)
+#	{
+#		my $v_3_min_row_y_by_576 = (3-$row_y)*576;
+#		foreach my $mod_x (0..7)
+#		{
+#			foreach my $row_x (0..8)
+#			{
+#				foreach my $mod_y (0..7)
+#				{
+#					substr($frame,($mod_y*8)+$row_x_by_64+(7-$mod_x)+$v_3_min_row_y_by_576,1,
+#						substr($frame_in,$mod_y+$row_x_by_8+$mod_x_by_72+$row_y_by_576,1)
+#					);
+#					
+#				}
+#				$row_x_by_64+=64;
+#				$row_x_by_8+=8;
+#			}
+#			$row_x_by_64=0;
+#			$row_x_by_8=0;
+#			$mod_x_by_72+=72;
+#		}
+#		$mod_x_by_72=0;
+#		$row_y_by_576+=576;
+#	}
+
+
 
 	for(0..((($wallWidth*$wallSubpixel*$wallHeight)/$ppp) - 1))
 	{
@@ -619,6 +661,7 @@ sub setFrame($)
 					if($serial)
 					{
 						$bytes = $serial->write(escape($data));
+						usleep(1000);
 					}
 				};
 				warn localtime(time).' connection error '.$@ if $@;
