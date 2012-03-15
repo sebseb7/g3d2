@@ -24,9 +24,10 @@ foreach my $pix (0..2304)
 	my $start = time;
 
 	g3d2::setFrame(\@frame_black);
+#	usleep(50000);
 	g3d2::setFrame(\@frame_white);
+#	usleep(50000);
 
-   
 	warn (2 / (time-$start) );
 }
 

@@ -27,14 +27,15 @@ ISR (USART_RX_vect)
 		*rxhead0 = c;
 		++rxhead0;
 		if (rxhead0 == (rxbuf0 + UART_RXBUFSIZE)) rxhead0 = rxbuf0;
-#ifdef ADDR_100
+/*#ifdef ADDR_100
 		if((diff > 150)&&(xon==0))
 		{
 			xon=1;
 			loop_until_bit_is_set(UCSR0A, UDRE0);
 			UDR0 = 0x13;
 		}
-#endif
+#endif*/
+
 	}
 
 	UCSR0B |= (1 << RXCIE0);
@@ -59,9 +60,10 @@ void USART0_Init (void)
 
 	UCSR0B |= (1 << RXEN0);
 	UCSR0B &= ~(1 << TXEN0);
-#ifdef ADDR_100
+/*#ifdef ADDR_100
 	UCSR0B |= (1 << TXEN0);
-#endif
+#endif*/
+
 	UCSR0B |= (1 << RXCIE0);
 
 	rxhead0 = rxtail0 = rxbuf0;
@@ -82,7 +84,7 @@ uint8_t USART0_Getc_nb(uint8_t *c)
 	*c = *rxtail0;
 	if (++rxtail0 == (rxbuf0 + UART_RXBUFSIZE)) rxtail0 = rxbuf0;
 
-#ifdef ADDR_100
+/*#ifdef ADDR_100
 
 	int diff = rxhead0 - rxtail0;
 	if (diff < 0) diff += UART_RXBUFSIZE;
@@ -93,7 +95,7 @@ uint8_t USART0_Getc_nb(uint8_t *c)
 		loop_until_bit_is_set(UCSR0A, UDRE0);
 		UDR0 = 0x11;
 	}
-#endif
+#endif*/
 
 
 	return 1;

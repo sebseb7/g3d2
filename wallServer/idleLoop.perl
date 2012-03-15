@@ -54,14 +54,14 @@ while(1)
 						{
 							#warn 'x';
 							$delay -= 100;
-							#usleep(100*1000);
+#							usleep(100*1000);
 							if($event eq 'next')
 							{
 								$event = '';
 								last;
 							}
 						}
-						#usleep($delay*1000);
+#						usleep($delay*1000);
 						
 					}
 					#warn 'a';

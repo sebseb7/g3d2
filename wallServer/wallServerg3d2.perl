@@ -597,29 +597,43 @@ sub setFrame($)
 
 #	warn 'setFrame';
 	
-	my $frame_in=shift;
-	my $frame = '0' x ($wallWidth*$wallHeight);
+	my $frame=shift;
+	
+#	my $frame_in=shift;
+#	my $frame = '0' x ($wallWidth*$wallHeight);
 
 	$serial->write(chr(0x67));#
 
 	my $ppp = $wallWidth*$wallSubpixel;
 
-
-	foreach my $row_y (0..3)
-	{
-		foreach my $mod_x (0..7)
-		{
-			foreach my $row_x (0..8)
-			{
-				foreach my $mod_y (0..7)
-				{
-					substr($frame,($mod_y*8)+($row_x*64)+(7-$mod_x)+((3-$row_y)*576),1,
-						substr($frame_in,$mod_y+($row_x*8)+($mod_x*72)+($row_y*576),1)
-					);
-				}
-			}
-		}
-	}
+#	my $row_y_by_576 = 0;
+#	my $mod_x_by_72 = 0;
+#	my $row_x_by_64 = 0;
+#	my $row_x_by_8 = 0;
+#	foreach my $row_y (0..3)
+#	{
+#		my $v_3_min_row_y_by_576 = (3-$row_y)*576;
+#		foreach my $mod_x (0..7)
+#		{
+#			foreach my $row_x (0..8)
+#			{
+#				foreach my $mod_y (0..7)
+#				{
+#					substr($frame,($mod_y*8)+$row_x_by_64+(7-$mod_x)+$v_3_min_row_y_by_576,1,
+#						substr($frame_in,$mod_y+$row_x_by_8+$mod_x_by_72+$row_y_by_576,1)
+#					);
+#					
+#				}
+#				$row_x_by_64+=64;
+#				$row_x_by_8+=8;
+#			}
+#			$row_x_by_64=0;
+#			$row_x_by_8=0;
+#			$mod_x_by_72+=72;
+#		}
+#		$mod_x_by_72=0;
+#		$row_y_by_576+=576;
+#	}
 
 
 
@@ -647,6 +661,7 @@ sub setFrame($)
 					if($serial)
 					{
 						$bytes = $serial->write(escape($data));
+						usleep(1000);
 					}
 				};
 				warn localtime(time).' connection error '.$@ if $@;

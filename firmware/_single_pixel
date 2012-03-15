@@ -3,7 +3,7 @@
 use Device::SerialPort;
 use Time::HiRes qw(usleep);
 
-my $port = Device::SerialPort->new("/dev/ttyUSB1");
+my $port = Device::SerialPort->new("/dev/ttyUSB0");
 $port->databits(8);
 $port->baudrate(500000);
 $port->parity("none");
