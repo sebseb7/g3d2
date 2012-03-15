@@ -64,7 +64,6 @@ void sspReceive(uint8_t *buf, uint32_t length)
 	return; 
 }
 
-
 void sspSendReceive(uint8_t *buf, uint32_t length)
 {
 	uint32_t i;

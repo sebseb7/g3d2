@@ -27,7 +27,7 @@
 
 static inline void bootloader_wdt_off(void)
 {
-    cli();
+	cli();
 	wdt_reset();
 	/* Clear WDRF in MCUSR */
 	MCUSR &= ~(1<<WDRF);
