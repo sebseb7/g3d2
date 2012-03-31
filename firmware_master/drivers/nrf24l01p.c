@@ -4,22 +4,6 @@
 
 #define DEFAULT_SPEED R_RF_SETUP_DR_2M
 
-uint8_t _nrfresets=0;
-
-/*-----------------------------------------------------------------------*/
-/* Transmit a byte via SPI                                               */
-/*-----------------------------------------------------------------------*/
-inline void xmit_spi(uint8_t dat) {
-	sspSendByte (dat);
-}
-
-
-/*
-#define CS_LOW()    gpioSetValue(RB_SPI_NRF_CS, 0)
-#define CS_HIGH()   gpioSetValue(RB_SPI_NRF_CS, 1)
-#define CE_LOW()    gpioSetValue(RB_NRF_CE, 0)
-#define CE_HIGH()   gpioSetValue(RB_NRF_CE, 1)
-*/
 
 #define CE_HIGH()    (LPC_GPIO2->FIOPIN |=  (1 << 2))
 #define CE_LOW()    (LPC_GPIO2->FIOPIN &= ~(1 << 2))
@@ -27,27 +11,27 @@ inline void xmit_spi(uint8_t dat) {
 #define CS_LOW()    (LPC_GPIO2->FIOPIN &= ~(1 << 6))
 
 
-void nrf_cmd(uint8_t cmd){
+void nrf_cmd(uint8_t cmd)
+{
 	CS_LOW();
-	xmit_spi(cmd);
+	sspSendByte (cmd);
 	CS_HIGH();
 };
 
 
-
-
-void nrf_write_reg(const uint8_t reg, const uint8_t val){
+void nrf_write_reg(const uint8_t reg, const uint8_t val)
+{
 	CS_LOW();
-	xmit_spi(C_W_REGISTER | reg);
-	xmit_spi(val);
+	sspSendByte(C_W_REGISTER | reg);
+	sspSendByte(val);
 	CS_HIGH();
 };
 
 
-
-void nrf_write_long(const uint8_t cmd, int len, const uint8_t* data){
+void nrf_write_long(const uint8_t cmd, int len, const uint8_t* data)
+{
 	CS_LOW();
-	xmit_spi(cmd);
+	sspSendByte(cmd);
 	sspSend(data,len);
 	CS_HIGH();
 };
@@ -56,42 +40,25 @@ void nrf_write_long(const uint8_t cmd, int len, const uint8_t* data){
 	nrf_write_long(C_W_REGISTER|(reg), len, data)
 
 
-
-
-void nrf_set_rx_mac(int pipe, int rxlen, int maclen, const uint8_t * mac){
-#ifdef SAFE
-	assert(maclen>=1 || maclen<=5);
-	assert(rxlen>=1 || rxlen<=32);
-	assert(pipe>=0 || pipe<=5);
-	assert(mac!=NULL);
-	if(pipe>1)
-		assert(maclen==1);
-#endif
+void nrf_set_rx_mac(int pipe, int rxlen, int maclen, const uint8_t * mac)
+{
 	nrf_write_reg(R_RX_PW_P0+pipe,rxlen);
-
 	nrf_write_reg_long(R_RX_ADDR_P0+pipe,maclen,mac);
-//    nrf_write_reg(R_EN_RXADDR, 
-//            nrf_read_reg(R_EN_RXADDR) | (1<<pipe)
-//            );
 };
 
-void nrf_set_tx_mac(int maclen, const uint8_t * mac){
-#ifdef SAFE
-	assert(maclen>=1 || maclen<=5);
-	assert(mac!=NULL);
-#endif
+void nrf_set_tx_mac(int maclen, const uint8_t * mac)
+{
 	nrf_write_reg_long(R_TX_ADDR,maclen,mac);
 };
 
 
-void nrf_set_channel(int channel){
-#ifdef SAFE
-	assert(channel &~R_RF_CH_BITS ==0);
-#endif
+void nrf_set_channel(int channel)
+{
 	nrf_write_reg(R_RF_CH, channel);
 };
 
-void nrf_config_set(nrfconfig config){
+void nrf_config_set(nrfconfig config)
+{
 	nrf_write_reg(R_SETUP_AW,R_SETUP_AW_5);
 
 	nrf_set_channel(config->channel);
@@ -113,13 +80,15 @@ void nrf_config_set(nrfconfig config){
 };
 
 void nrf_set_strength(unsigned char strength){
+
 	if(strength>3)
 		strength=3;
 	nrf_write_reg(R_RF_SETUP,DEFAULT_SPEED|(strength<<1));
 };
 
 
-void nrf_init() {
+void nrf_init() 
+{
 	//ce
 	LPC_GPIO2->FIODIR |= (1<<2);
 	//cs_rad
@@ -162,7 +131,7 @@ char snd_pkt_no_crc(int size, uint8_t * pkt)
 			);
 
 	CS_LOW();
-	xmit_spi(C_W_TX_PAYLOAD);
+	sspSendByte(C_W_TX_PAYLOAD);
 	sspSend(pkt,size);
 	CS_HIGH();
 	CS_HIGH();
@@ -177,14 +146,12 @@ char snd_pkt_no_crc(int size, uint8_t * pkt)
 };
 
 
-inline void rcv_spi(uint8_t *dat) {
-	sspReceive(dat, 1);
-}
 
 
-void nrf_read_long(const uint8_t cmd, int len, uint8_t* data){
+void nrf_read_long(const uint8_t cmd, int len, uint8_t* data)
+{
 	CS_LOW();
-	xmit_spi(cmd);
+	sspSendByte(cmd);
 	for(int i=0;i<len;i++)
 		data[i] = 0x00;
 	sspSendReceive(data,len);
@@ -193,7 +160,8 @@ void nrf_read_long(const uint8_t cmd, int len, uint8_t* data){
 
 
 // High-Level:
-void nrf_rcv_pkt_start(void){
+void nrf_rcv_pkt_start(void)
+{
 
 	nrf_write_reg(R_CONFIG,
 			R_CONFIG_PRIM_RX| // Receive mode
@@ -207,22 +175,25 @@ void nrf_rcv_pkt_start(void){
 	CE_HIGH();
 };
 
-void nrf_read_pkt(int len, uint8_t* data){
+void nrf_read_pkt(int len, uint8_t* data)
+{
 	CS_LOW();
-	xmit_spi(C_R_RX_PAYLOAD);
+	sspSendByte(C_R_RX_PAYLOAD);
 	sspReceive(data,len);
 	CS_HIGH();
 };
 
 
-uint8_t nrf_cmd_status(uint8_t cmd){
+uint8_t nrf_cmd_status(uint8_t cmd)
+{
 	CS_LOW();
 	sspSendReceive(&cmd, 1);
 	CS_HIGH();
 	return cmd;
 };
 
-int nrf_rcv_pkt_poll(int maxsize, uint8_t * pkt){
+int nrf_rcv_pkt_poll(int maxsize, uint8_t * pkt)
+{
 	uint8_t len;
 	uint8_t status=0;
 
@@ -254,7 +225,8 @@ int nrf_rcv_pkt_poll(int maxsize, uint8_t * pkt){
 };
 
 
-void nrf_rcv_pkt_end(void){
+void nrf_rcv_pkt_end(void)
+{
 	CE_LOW();
 	nrf_cmd(C_FLUSH_RX);
 	nrf_write_reg(R_STATUS,R_STATUS_RX_DR);

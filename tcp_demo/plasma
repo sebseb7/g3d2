@@ -17,31 +17,46 @@ foreach my $x (0..2303)
 }
 
 
+my $count4 = 0;
+my $count3 = 0;
 my $count = 0;
 my $count2 = 0;
 while(1)
 {
-	$count+= 0.001;
-	$count2 += 0.01;
+	$count4+= 0.03;
+	$count3-= 0.04;
+	$count+= 0.0004;
+	$count2 += 0.003;
 	my $start = time;
 
-	my $count1_part = sin($count2)*10;
+	my $count1_part = sin($count2)*sin($count3*6)*3;
 	my $count2_part = sin($count)*60;
+
+	my $x3 =  ((sin($count3)+1)*(sin($count3)+1)*18);
+	my $y3 =  ((cos($count3)+1)*(sin($count4)+1)*10)+8;
+	
+	my $x2 =  ((sin($count4)+1)*10)+25;
+	my $y2 =  ((cos($count4)+1)*10)+6;
 
 	foreach my $y (0..31)
 	{
 		my $yval = (sin($y/3+sin(sin($count*2)*2)*4)+1)*164;
 		foreach my $x (0..71)
 		{
-		
+	
+
 			my $value = (sin($x/2+$count1_part)+1)*164;
 			$value +=  $yval;
-			$value = (sin(($value/80)+$count2_part)+1)*67;
+			$value = (sin(($value/50)+sin($count2_part)*20)+1)*4;
+			
+			my $value2 = (sin($x/2+$count1_part)+1)*164;
+			$value2 +=  $yval;
+			$value2 = (sin(($value2/30)+sin($count2_part)*20)+1)*4;
 
-			$value = int(($value+1)/8.5);
 
-			$value = 1 if $value == 0;
-			$frame[$x+($y*72)]=$value; 
+
+#			$value = 1 if $value == 0;
+			$frame[$x+($y*72)]=$value+$value2; 
 		}
 	}
 

@@ -6,7 +6,6 @@ enum {
 	DISPLAY_WIDTH = 72,
 	DISPLAY_HEIGHT = 32
 };
-        
 
 void pixel(int x, int y, unsigned char color);
 

@@ -11,7 +11,7 @@
 #define COL5_PORT PORTB
 #define COL6_PORT PORTB
 #define COL7_PORT PORTB
- 
+
 #define ROW0_PORT PORTC
 #define ROW1_PORT PORTC
 #define ROW2_PORT PORTC
@@ -29,7 +29,7 @@
 #define COL5_DDR DDRB
 #define COL6_DDR DDRB
 #define COL7_DDR DDRB
- 
+
 #define ROW0_DDR DDRC
 #define ROW1_DDR DDRC
 #define ROW2_DDR DDRC
@@ -47,7 +47,7 @@
 #define COL5_PIN PINB3
 #define COL6_PIN PINB4
 #define COL7_PIN PINB5
- 
+
 #define ROW0_PIN PINC0
 #define ROW1_PIN PINC1
 #define ROW2_PIN PINC2

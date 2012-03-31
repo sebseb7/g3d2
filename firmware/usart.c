@@ -15,19 +15,18 @@ volatile uint8_t xon = 0;
 ISR (USART_RX_vect)
 {
 	UCSR0B &= ~(1 << RXCIE0);
- 	asm volatile("sei");
-	
-    int diff;
-    uint8_t c;
-    c=UDR0;
-    diff = rxhead0 - rxtail0;
-    if (diff < 0) diff += UART_RXBUFSIZE;
-    if (diff < UART_RXBUFSIZE -1)
-    {
-        *rxhead0 = c;
-        ++rxhead0;
-        if (rxhead0 == (rxbuf0 + UART_RXBUFSIZE)) rxhead0 = rxbuf0;
+	asm volatile("sei");
 
+	int diff;
+	uint8_t c;
+	c=UDR0;
+	diff = rxhead0 - rxtail0;
+	if (diff < 0) diff += UART_RXBUFSIZE;
+	if (diff < UART_RXBUFSIZE -1)
+	{
+		*rxhead0 = c;
+		++rxhead0;
+		if (rxhead0 == (rxbuf0 + UART_RXBUFSIZE)) rxhead0 = rxbuf0;
 /*#ifdef ADDR_100
 		if((diff > 150)&&(xon==0))
 		{
@@ -81,15 +80,15 @@ void USART0_putc (char c)
 
 uint8_t USART0_Getc_nb(uint8_t *c)
 {
-    if (rxhead0==rxtail0) return 0;
-    *c = *rxtail0;
-    if (++rxtail0 == (rxbuf0 + UART_RXBUFSIZE)) rxtail0 = rxbuf0;
+	if (rxhead0==rxtail0) return 0;
+	*c = *rxtail0;
+	if (++rxtail0 == (rxbuf0 + UART_RXBUFSIZE)) rxtail0 = rxbuf0;
 
 /*#ifdef ADDR_100
 
-    int diff = rxhead0 - rxtail0;
-    if (diff < 0) diff += UART_RXBUFSIZE;
-    
+	int diff = rxhead0 - rxtail0;
+	if (diff < 0) diff += UART_RXBUFSIZE;
+
 	if((diff < 50)&&(xon==1))
 	{
 		xon=0;
@@ -99,5 +98,5 @@ uint8_t USART0_Getc_nb(uint8_t *c)
 #endif*/
 
 
-    return 1;
+	return 1;
 }

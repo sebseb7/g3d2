@@ -26,7 +26,7 @@ enum { ZOOM = 14 };
 static unsigned char display[DISPLAY_HEIGHT][DISPLAY_WIDTH];
 static unsigned char display2[DISPLAY_HEIGHT][DISPLAY_WIDTH];
 
- 
+
 int main(int argc,char** argv)
 {
 	srand(SDL_GetTicks());
@@ -57,26 +57,31 @@ int main(int argc,char** argv)
 	SDL_EnableKeyRepeat(100, 30);	// FIXME: must be deleted
 	SDL_Flip(screen);
 
-    SDL_Event ev;
+	SDL_Event ev;
 
 
+	for(int x = 0; x < DISPLAY_WIDTH; x++)
+		for(int y = 0; y < DISPLAY_HEIGHT; y++)
+		{
+			display[y][x]=0;
+			display2[y][x]=16;
+		}
 	eventLock = SDL_CreateMutex();
 	displayLock = SDL_CreateMutex();
 	SDL_Thread *thread = NULL;
-  	thread = SDL_CreateThread(usbThread, NULL);
-                                    
-
+	thread = SDL_CreateThread(usbThread, NULL);
+									
 
 	int running = 1;
 
-	int rerender = 0;
+	int rerender = 1;
 
 	while(running) {
 
 
 		SDL_mutexP(eventLock);
 		while(SDL_PollEvent(&ev)) {
-                
+				
 			switch(ev.type) {
 			case SDL_USEREVENT:
 				rerender = 1;
@@ -84,9 +89,9 @@ int main(int argc,char** argv)
 			case SDL_QUIT:
 				running = 0;
 				break;
-            case SDL_KEYUP:
+			case SDL_KEYUP:
 			case SDL_KEYDOWN:
-                        
+						
 				switch(ev.key.keysym.sym) {
 				case SDLK_ESCAPE:
 					running = 0;
@@ -102,16 +107,17 @@ int main(int argc,char** argv)
 
 		}
 		SDL_mutexV(eventLock);
-                                                                        
-
+																		
 		if(rerender)
 		{
 			rerender=0;
+//printf("loop\n");
 			SDL_mutexP(displayLock);
 			for(int x = 0; x < DISPLAY_WIDTH; x++)
 				for(int y = 0; y < DISPLAY_HEIGHT; y++)
 					if(display[y][x] != display2[y][x]){
 						display2[y][x]=display[y][x];
+//						printf("dp\n");
 						Draw_FillCircle(screen, ZOOM*x + ZOOM/2, ZOOM*y + ZOOM/2, ZOOM*0.45, COLORS[display[y][x]]);
 					}
 
@@ -135,45 +141,46 @@ static int usbThread(void *nothing)
 
 	int tty_fd;
 
-        struct termios tio;
- 
- 
-        memset(&tio,0,sizeof(tio));
-        tio.c_iflag=0;
-        tio.c_oflag=0;
-        tio.c_cflag=CS8|CREAD|CLOCAL;           // 8n1, see termios.h for more information
-        tio.c_lflag=0;
-        tio.c_cc[VMIN]=1;
-        tio.c_cc[VTIME]=5;
- 
+		struct termios tio;
+
+
+		memset(&tio,0,sizeof(tio));
+		tio.c_iflag=0;
+		tio.c_oflag=0;
+		tio.c_cflag=CS8|CREAD|CLOCAL;           // 8n1, see termios.h for more information
+		tio.c_lflag=0;
+		tio.c_cc[VMIN]=1;
+		tio.c_cc[VTIME]=5;
+
 #if defined(MAC_OS_X_VERSION_10_4) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4)
-        if ( (tty_fd=open("/dev/cu.usbserial-A100DEF4", O_RDWR )) == -1)
-        {
+		if ( (tty_fd=open("/dev/cu.usbserial-A100DEF4", O_RDWR )) == -1)
+		{
 			printf( "Error %d opening device)\n", errno );
-        }
+		}
 		speed_t speed = 500000;
 		if ( ioctl( tty_fd,	 IOSSIOSPEED, &speed ) == -1 )
 		{
 			printf( "Error %d calling ioctl( ..., IOSSIOSPEED, ... )\n", errno );
 		}
+#warning compileosx
 #else
- //       tty_fd=open("/dev/ttyUSB1", O_RDWR );
-        tty_fd=open("/dev/ttyUSB1", O_RDWR | O_NONBLOCK);      
-        cfsetospeed(&tio,B500000);
+//       tty_fd=open("/dev/ttyUSB1", O_RDWR );
+		tty_fd=open("/dev/ttyUSB1", O_RDWR | O_NONBLOCK);      
+		cfsetospeed(&tio,B500000);
 		cfsetispeed(&tio,B500000);
 #endif 
-        tcsetattr(tty_fd,TCSANOW,&tio);
-        
+		tcsetattr(tty_fd,TCSANOW,&tio);
+		
 	unsigned char c;
 
 	int state = 0;
 	int escape = 0;
-            
+			
 	int idx = 0;
 	int pixel_mod = 0;
 	int pixel_x = 0;
 	int pixel_y = 0;
-                            
+							
 	int pixel_x_state = 0;
 	int pixel_y_state = 0;
 	int mod_state = 0;
@@ -181,8 +188,8 @@ static int usbThread(void *nothing)
 	
 	int rerender = 0;
 
-  	SDL_Event ev;
-  
+	SDL_Event ev;
+
 	ev.type = SDL_USEREVENT;
 	ev.user.code = 0;
 	ev.user.data1 = 0;
@@ -191,8 +198,9 @@ static int usbThread(void *nothing)
 	while(1)
 	{
 	
-       	if(read(tty_fd,&c,1)>0)
-       	{
+		if(read(tty_fd,&c,1)>0)
+		{
+			printf("read %i\n",c);
 			switch(c)
 			{
 				case 0x68:
@@ -263,7 +271,7 @@ static int usbThread(void *nothing)
 								display[y1][x1]=c;
 								rerender=1;
 							}
-			       			SDL_mutexV(displayLock);
+							SDL_mutexV(displayLock);
 						}
 				}
 				idx++;
@@ -279,7 +287,7 @@ static int usbThread(void *nothing)
 				SDL_mutexP(displayLock);
 				display[y1][x1] = (c & 0x0f);
 				display[y1+1][x1] = ((c & 0xf0)>>4);
-       			SDL_mutexV(displayLock);
+				SDL_mutexV(displayLock);
 
 				pixel_y_state+=2;
 
@@ -300,14 +308,14 @@ static int usbThread(void *nothing)
 			}
 		}
 
-       	if(rerender==1)
-       	{
+		if(rerender==1)
+		{
 			rerender=0;
 			SDL_mutexP(eventLock);
 			SDL_PushEvent(&ev);
 			SDL_mutexV(eventLock);
-  	
-	    }
+
+		}
 	}
 
 	close(tty_fd);

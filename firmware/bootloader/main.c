@@ -174,7 +174,7 @@ int main(void)
 {
 
 #ifdef WDT_OFF_SPECIAL
-    bootloader_wdt_off();
+	bootloader_wdt_off();
 #else
 	cli();
 	wdt_reset();
@@ -199,9 +199,9 @@ int main(void)
 
 	UART_CTRL = UART_CTRL_DATA;
 	UART_CTRL2 = UART_CTRL2_DATA;
-	
-	
-//	leds_init();
+
+
+	//	leds_init();
 
 	if ((BLPIN & (1<<BLPNUM)) && (GPIOR2 == 0) ) {
 
@@ -209,12 +209,12 @@ int main(void)
 		BLPORT &= ~(1<<BLPNUM);		// set to default		
 		jump_to_app();			// Jump to application sector
 	}
-	
+
 	if(GPIOR2 != 0)
-    {
+	{
 		GPIOR2=0;
 	}
-                        
+
 
 	for(;;) {
 		val = recvchar();
@@ -222,19 +222,19 @@ int main(void)
 		if (val == 'a') {
 			sendchar('Y');			// Autoincrement is quicker
 
-		//write address
+			//write address
 		} else if (val == 'A') {
 			address = recvchar();		//read address 8 MSB
 			address = (address<<8) | recvchar();
 			sendchar('\r');
 
-		// Buffer load support
+			// Buffer load support
 		} else if (val == 'b') {
 			sendchar('Y');					// Report buffer load supported
 			sendchar((sizeof(gBuffer) >> 8) & 0xFF);	// Report buffer size in bytes
 			sendchar(sizeof(gBuffer) & 0xFF);
 
-		// Start buffer load
+			// Start buffer load
 		} else if (val == 'B') {
 			pagebuf_t size;
 			size = recvchar() << 8;				// Load high byte of buffersize
@@ -253,7 +253,7 @@ int main(void)
 				sendchar(0);
 			}
 
-		// Block read
+			// Block read
 		} else if (val == 'g') {
 			pagebuf_t size;
 			size = recvchar() << 8;				// Load high byte of buffersize
@@ -266,61 +266,61 @@ int main(void)
 				address = readEEpromPage(address, size);
 			}
 
-		// Chip erase
- 		} else if (val == 'e') {
+			// Chip erase
+		} else if (val == 'e') {
 			if (device == DEVTYPE) {
 				eraseFlash();
 			}
 			sendchar('\r');
 
-		// Exit upgrade
+			// Exit upgrade
 		} else if (val == 'E') {
 			wdt_enable(EXIT_WDT_TIME); // Enable Watchdog Timer to give reset
 			sendchar('\r');
 
-		// Enter programming mode
+			// Enter programming mode
 		} else if (val == 'P') {
 			sendchar('\r');
 
-		// Leave programming mode
+			// Leave programming mode
 		} else if (val == 'L') {
 			sendchar('\r');
 
-		// return programmer type
+			// return programmer type
 		} else if (val == 'p') {
 			sendchar('S');		// always serial programmer
 
-		// Return device type
+			// Return device type
 		} else if (val == 't') {
 			sendchar(DEVTYPE);
 			sendchar(0);
 
-		// clear and set LED ignored
+			// clear and set LED ignored
 		} else if ((val == 'x') || (val == 'y')) {
 			recvchar();
 			sendchar('\r');
 
-		// set device
+			// set device
 		} else if (val == 'T') {
 			device = recvchar();
 			sendchar('\r');
 
-		// Return software identifier
+			// Return software identifier
 		} else if (val == 'S') {
 			send_boot();
 
-		// Return Software Version
+			// Return Software Version
 		} else if (val == 'V') {
 			sendchar(VERSION_HIGH);
 			sendchar(VERSION_LOW);
 
-		// Return Signature Bytes 
+			// Return Signature Bytes 
 		} else if (val == 's') {
 			sendchar(SIG_BYTE3);
 			sendchar(SIG_BYTE2);
 			sendchar(SIG_BYTE1);
 
-		/* ESC */
+			/* ESC */
 		} else if(val != 0x1b) {
 			sendchar('?');
 		}
