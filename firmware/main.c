@@ -278,14 +278,20 @@ int main(void)
 						break;
 					case 2:
 					
-						if(
-							(pixel_x >= offset_x)&& 
-							(pixel_x < (offset_x+8))&& 
-							(pixel_y >= offset_y)&&
-							(pixel_y < (offset_y+8))
-						) 
-						{
-							setLedXY(7-(pixel_x-offset_x),7-(pixel_y-offset_y),data);
+						if((pixel_x == 0)&&(pixel_y == 0)){
+							setLedAll(data);
+						}else{
+							pixel_x--;
+							pixel_y--;
+							if(
+								(pixel_x >= offset_x)&& 
+								(pixel_x < (offset_x+8))&& 
+								(pixel_y >= offset_y)&&
+								(pixel_y < (offset_y+8))
+							) 
+							{
+								setLedXY(7-(pixel_x-offset_x),7-(pixel_y-offset_y),data);
+							}
 						}
 				}
 				idx++;

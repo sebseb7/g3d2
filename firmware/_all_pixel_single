@@ -23,7 +23,7 @@ while(1)
 			foreach my $x (0..71)
 			{
 		
-				my $return=$port->write(chr(0x42).esc(chr($x).chr($y).chr($col)));
+				my $return=$port->write(chr(0x42).esc(chr($x+1).chr($y+1).chr($col)));
 				usleep(3);
 			}
 			

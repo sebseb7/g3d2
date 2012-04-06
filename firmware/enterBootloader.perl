@@ -32,8 +32,8 @@ sub esc($)
     
     
 	$data =~ s/\x65/\x65\x3/go;
-	$data =~ s/\x67/\x65\x1/go;
-	$data =~ s/\x68/\x65\x2/go;
+	$data =~ s/\x23/\x65\x1/go;
+	$data =~ s/\x42/\x65\x2/go;
 	$data =~ s/\x66/\x65\x4/go;
                                                             
 	return $data;
