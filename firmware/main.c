@@ -193,20 +193,19 @@ int main(void)
 		}
 	}
 
-
-
 	display_addr();
 	
 	USART0_Init();
-
-	
 
 	uint8_t data = 0;  
 	uint8_t state = 0;
 	uint8_t escape = 0;
 
 	uint8_t idx = 0;
-    uint8_t pixel_mod = 0;
+
+	uint8_t offset_x = (addr2 % 9)*8;
+	uint8_t offset_y = 24 - (((addr2 - (addr2 % 9)) / 9) * 8);
+
     uint8_t pixel_x = 0;
     uint8_t pixel_y = 0;
 
@@ -215,8 +214,6 @@ int main(void)
 	uint8_t state_pixel_y = 0;
 	uint8_t state_mod_y = 0;
 
-
-
 	while(1)
 	{
 		if(USART0_Getc_nb(&data))
@@ -224,12 +221,12 @@ int main(void)
 
 			switch(data)
 			{
-				case 0x68:
+				case 0x42:
 					// single pixel
 					state = 1;
 					idx = 0;
 					continue;
-				case 0x67:
+				case 0x23:
 					// full frame
 					state = 2;
 	
@@ -253,10 +250,10 @@ int main(void)
 				switch(data)
 				{
 					case 0x01:
-						data = 0x67;
+						data = 0x23;
 						break;
 					case 0x02:
-						data = 0x68;
+						data = 0x42;
 						break;
 					case 0x03:
 						data = 0x65;
@@ -274,18 +271,21 @@ int main(void)
 				switch(idx)
 				{
 					case 0:
-						pixel_mod = data;
-						break;
-					case 1:
 						pixel_x = data;
 						break;
-					case 2:
+					case 1:
 						pixel_y = data;
 						break;
-					case 3:
-						if(pixel_mod == addr2)
+					case 2:
+					
+						if(
+							(pixel_x >= offset_x)&& 
+							(pixel_x < (offset_x+8))&& 
+							(pixel_y >= offset_y)&&
+							(pixel_y < (offset_y+8))
+						) 
 						{
-							setLedXY(7-pixel_x,pixel_y,data);
+							setLedXY(7-(pixel_x-offset_x),7-(pixel_y-offset_y),data);
 						}
 				}
 				idx++;

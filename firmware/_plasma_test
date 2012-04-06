@@ -42,7 +42,7 @@ foreach my $fr (0..1000)
 	$z+= ((1-sin($z1))/90);
 	$z1+=0.10105;
 warn $z1;
-	$port->write(chr(103));
+	$port->write(chr(0x23));
 	my $time1 = time;
  
 
@@ -91,7 +91,7 @@ warn $z1;
 
 		
 	}
-	$port->write(chr(103));
+	$port->write(chr(0x23));
 	usleep(24000);
 	$port->write($frame_cache{$fr});
 
@@ -106,7 +106,7 @@ foreach my $fr (0..1000)
 {
 	my $time1 = time;
 
-	$port->write(chr(103).$frame_cache{$fr});
+	$port->write(chr(0x23).$frame_cache{$fr});
 
 	usleep(24000);
 
@@ -124,8 +124,8 @@ sub esc($)
     
     
     $data =~ s/\x65/\x65\x3/go;
-	$data =~ s/\x67/\x65\x1/go;
-	$data =~ s/\x68/\x65\x2/go;
+	$data =~ s/\x23/\x65\x1/go;
+	$data =~ s/\x42/\x65\x2/go;
 	$data =~ s/\x66/\x65\x4/go;
                                                             
 	return $data;

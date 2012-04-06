@@ -293,7 +293,7 @@ flash: $(TARGET).hex
 	
 
 uflash: clean  $(TARGET).hex
-#	./enterBootloader.perl $(ADDR)
+	./enterBootloader.perl $(ADDR)
 	$(AVRDUDE) $(AVRDUDE_UFLAGS) $(AVRDUDE_WRITE_FLASH)
 	
 eeprom: $(TARGET).eep

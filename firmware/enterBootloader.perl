@@ -22,7 +22,7 @@ $port->stopbits(1);
 #while(1)
 #{
 	my $return=$port->write(chr(102).esc(chr($ARGV[0]))."\n");
-	sleep(1);
+#	sleep(1);
 #}
 warn $port->read(1);
 
