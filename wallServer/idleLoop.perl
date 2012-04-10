@@ -40,7 +40,7 @@ while(1)
 		foreach my $file (@files)
 		{
 
-			my $start = time*1000;
+			my $start = 'init';
 
 			$0 = 'idleloop - playing: '.$file;
 			
@@ -51,6 +51,10 @@ while(1)
 			{
 				if(/^(\d+) (.*)\r\n$/)
 				{
+					if($start eq 'init')
+					{
+						$start = time*1000 + $1;
+					}
 					my $delay = $1 - (time*1000-$start);
 					if( ($delay > 0) and ($delay < 60000))
 					{
