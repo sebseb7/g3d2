@@ -35,7 +35,7 @@ while(1)
 			push @files,$file;
 		}
 		closedir $dh;
-#		@files = shuffle(@files);
+		@files = shuffle(@files);
 
 		foreach my $file (@files)
 		{
