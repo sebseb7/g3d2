@@ -7,6 +7,11 @@ use List::Util qw(shuffle);
 
 
 g3d2::init();
+g3d2::readline();
+
+g3d2::setLevel(0);
+g3d2::readline();
+
 
 close STDOUT;
 open STDOUT,'>>logfile.txt';
@@ -21,7 +26,6 @@ while(1)
 	eval
 	{
 
-		g3d2::setLevel(0);
 
 		my @files;
 		
@@ -66,6 +70,7 @@ while(1)
 					}
 					#warn 'a';
 					g3d2::binFrame($2);
+					g3d2::readline();
 					#warn 'ok';
 				}
 				if($event eq 'next')
@@ -76,7 +81,6 @@ while(1)
 			}
 			close infile;
 			# black frame
-			usleep(500000);
 		};
 	};
 	warn $@ if $@;
