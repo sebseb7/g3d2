@@ -7,6 +7,10 @@
 #include <fcntl.h>
 #include <termios.h>
 #include <string.h>
+
+#ifdef __APPLE__
+#include <AvailabilityMacros.h>
+#endif
 #if defined(MAC_OS_X_VERSION_10_4) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4)
 #include <sys/ioctl.h>
 #include <IOKit/serial/ioss.h>
@@ -153,7 +157,7 @@ static int usbThread(void *nothing)
 		tio.c_cc[VTIME]=5;
 
 #if defined(MAC_OS_X_VERSION_10_4) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4)
-		if ( (tty_fd=open("/dev/cu.usbserial-A100DEF4", O_RDWR )) == -1)
+		if ( (tty_fd=open("/dev/cu.usbserial-A100DEF2", O_RDWR )) == -1)
 		{
 			printf( "Error %d opening device)\n", errno );
 		}
@@ -203,12 +207,12 @@ static int usbThread(void *nothing)
 			printf("read %i\n",c);
 			switch(c)
 			{
-				case 0x68:
+				case 0x42:
 					// single pixel
 					state = 1;
 					idx = 0;
 					continue;
-				case 0x67:
+				case 0x23:
 					// full frame
 					state = 2;
 
@@ -231,10 +235,10 @@ static int usbThread(void *nothing)
 				switch(c)
 				{
 					case 0x01:
-						c = 0x67;
+						c = 0x23;
 						break;
 					case 0x02:
-						c = 0x68;
+						c = 0x42;
 						break;
 					case 0x03:
 						c = 0x65;
