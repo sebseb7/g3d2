@@ -18,11 +18,11 @@ each module has a "backpack" PCB, that contains the controller
 
 final layout:
 
-![pcb](/sebseb7/g3d2/raw/master/g3d2.jpg)
+![pcb](https://raw.github.com//sebseb7/g3d2/master/g3d2.jpg)
 
 boards:
 
-![pcb](/sebseb7/g3d2/raw/master/g3d2_led.png)
-![pcb2](/sebseb7/g3d2/raw/master/g3d2_ctrl.png)
+![pcb](https://raw.github.com/sebseb7/g3d2/master/g3d2_led.png)
+![pcb2](https://raw.github.com/sebseb7/g3d2/master/g3d2_ctrl.png)
 
 
